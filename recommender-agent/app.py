@@ -17,7 +17,11 @@ from recommender_agent.llm import GeminiJSONClient, LLMConfigurationError
 
 
 SERVICE_ROOT = Path(__file__).resolve().parent
-DEFAULT_CATALOG_PATH = SERVICE_ROOT.parent / "data" / "gymshark_products.json"
+DATASET_ENV = os.getenv("DATASET", "gymshark")
+if DATASET_ENV == "dataset2":
+    DEFAULT_CATALOG_PATH = SERVICE_ROOT.parent / "data" / "dataset2_products.json"
+else:
+    DEFAULT_CATALOG_PATH = SERVICE_ROOT.parent / "data" / "gymshark_products.json"
 DEFAULT_MODEL = "gemini-3.5-flash"
 
 
@@ -69,15 +73,23 @@ def _data_catalog_path(filename: str) -> Path:
 
 
 def _catalog_path(dataset: Optional[str] = None) -> Path:
-    if dataset:
+    dataset_name = dataset or os.getenv("DATASET")
+    if dataset_name:
         dataset_paths = {
             "gymshark": os.getenv("GYMSHARK_CATALOG_PATH", str(_data_catalog_path("gymshark_products.json"))),
             "dataset2": os.getenv("DATASET2_CATALOG_PATH", str(_data_catalog_path("dataset2_products.json"))),
         }
-        if dataset not in dataset_paths:
+        if dataset_name in dataset_paths:
+            return Path(dataset_paths[dataset_name]).expanduser()
+        elif dataset:
             raise ValueError(f"Unknown dataset '{dataset}'. Expected one of: {', '.join(sorted(dataset_paths))}.")
-        return Path(dataset_paths[dataset]).expanduser()
-    return Path(os.getenv("CATALOG_PATH", str(DEFAULT_CATALOG_PATH))).expanduser()
+
+    env_path = os.getenv("CATALOG_PATH")
+    if env_path:
+        if os.getenv("DATASET") == "dataset2" and "gymshark" in env_path:
+            return Path(env_path.replace("gymshark_products", "dataset2_products")).expanduser()
+        return Path(env_path).expanduser()
+    return Path(str(DEFAULT_CATALOG_PATH)).expanduser()
 
 
 def _model_name(request_model: Optional[str] = None) -> str:

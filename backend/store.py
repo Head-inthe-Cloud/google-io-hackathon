@@ -8,6 +8,7 @@ startup and lives only for the lifetime of the process.
 
 from __future__ import annotations
 
+import os
 import json
 import os
 import uuid
@@ -19,7 +20,7 @@ from typing import Any, Dict, List, Optional
 # Paths
 # ---------------------------------------------------------------------------
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-CATALOG_DATASET = os.getenv("CATALOG_DATASET", "dataset2").lower()
+CATALOG_DATASET = (os.getenv("DATASET") or os.getenv("CATALOG_DATASET") or "gymshark").lower()
 CATALOG_JSON_PATHS = {
     "dataset2": DATA_DIR / "dataset2_products.json",
     "gymshark": DATA_DIR / "gymshark_closet_inventory.json",
@@ -109,29 +110,67 @@ def _seed_dataset2(data: List[Dict[str, Any]]) -> int:
 def _seed_gymshark_inventory(data: Dict[str, Any]) -> int:
     global _next_catalog_id
     count = 0
-    for gender in ("mens", "womens"):
-        for item in data.get(gender, []):
+    if isinstance(data, list):
+        # This is dataset2 or other list-formatted datasets
+        for item in data:
             cid = _next_catalog_id
             _next_catalog_id += 1
+            
+            # Map categories fields if present
+            cats = item.get("categories") or {}
+            gender_val = cats.get("gender") or item.get("gender") or "mens"
+            if gender_val in ("men", "mens"):
+                gender = "mens"
+            elif gender_val in ("women", "womens"):
+                gender = "womens"
+            else:
+                gender = gender_val
+                
             _catalog_items[cid] = {
                 "id": cid,
-                "name": item["name"],
-                "image_url": item["image_url"],
+                "name": item.get("product_name") or item.get("name") or "Unknown Product",
+                "image_url": item.get("image_url") or "",
                 "description": item.get("description"),
-                "category": item["category"],
+                "category": cats.get("category") or item.get("category") or "Tops",
                 "gender": gender,
-                "color": item.get("color"),
-                "fit": item.get("fit"),
-                "activity": item.get("activity"),
-                "collection": item.get("collection"),
-                "product_link": item.get("product_link"),
-                "colors": None,
-                "style_tags": None,
+                "color": cats.get("color") or item.get("color"),
+                "fit": cats.get("fit") or item.get("fit"),
+                "activity": cats.get("activity") or item.get("activity"),
+                "collection": cats.get("collection") or item.get("collection"),
+                "product_link": item.get("product_link") or item.get("product_url"),
+                "brand": cats.get("brand") or item.get("brand") or "Everlane",
+                "colors": cats.get("features", None),
+                "style_tags": cats.get("features", None),
                 "style_vector": None,
                 "brand": "Gymshark",
                 "created_at": datetime.datetime.utcnow().isoformat(),
             }
             count += 1
+    else:
+        # Gymshark-style dict-formatted dataset with mens/womens keys
+        for gender in ("mens", "womens"):
+            for item in data.get(gender, []):
+                cid = _next_catalog_id
+                _next_catalog_id += 1
+                _catalog_items[cid] = {
+                    "id": cid,
+                    "name": item["name"],
+                    "image_url": item["image_url"],
+                    "description": item.get("description"),
+                    "category": item["category"],
+                    "gender": gender,
+                    "color": item.get("color"),
+                    "fit": item.get("fit"),
+                    "activity": item.get("activity"),
+                    "collection": item.get("collection"),
+                    "product_link": item.get("product_link"),
+                    "brand": item.get("brand") or "Gymshark",
+                    "colors": None,
+                    "style_tags": None,
+                    "style_vector": None,
+                    "created_at": datetime.datetime.utcnow().isoformat(),
+                }
+                count += 1
     return count
 
 
@@ -230,6 +269,7 @@ def add_catalog_item(item_data: Dict[str, Any]) -> Dict[str, Any]:
         "activity": item_data.get("activity"),
         "collection": item_data.get("collection"),
         "product_link": item_data.get("product_link") or item_data.get("source_url"),
+        "brand": item_data.get("brand") or ("Everlane" if os.getenv("DATASET") == "dataset2" else "Gymshark"),
         "colors": item_data.get("colors"),
         "style_tags": item_data.get("style_tags"),
         "style_vector": None,
