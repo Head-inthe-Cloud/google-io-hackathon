@@ -1,0 +1,12 @@
+services:
+  recommender-agent:
+    build:
+      context: ./recommender-agent
+    ports:
+      - "8001:8000"
+    environment:
+      CATALOG_PATH: /data/gymshark_products.json
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      RECOMMENDER_MODEL: ${RECOMMENDER_MODEL:-gemini-3.5-flash}
+    volumes:
+      - ./data:/data:ro

@@ -1,0 +1,123 @@
+{
+  "output_format_version": "agentic_product_set_recommender.v1",
+  "recommendation_type": "product_sets",
+  "product_sets": [
+    {
+      "set_id": "set_001",
+      "set_name": "Neutral Lifting Set",
+      "items": [
+        {
+          "candidate_id": "p3",
+          "role": "top",
+          "why_this_item": "The oversized grey tee keeps the look understated while matching the requested black and grey lifting palette.",
+          "product": {
+            "product_name": "Gymshark Vintage Legacy T-Shirt - Ash Grey",
+            "image_url": "https://cdn.shopify.com/s/files/1/0156/6146/files/images-VintageLegacyT_ShirtGSAshGreyA4C2J_GCB0_0746_V2.jpg?v=1776973409",
+            "description": "Men's oversized grey t-shirt from the Vintage Legacy range with washed and distressed details for a worn-in look and classic bodybuilding shape for lifting.",
+            "product_link": "https://gymshark.com/products/gymshark-vintage-legacy-t-shirt-ss-tops-grey-ss26",
+            "categories": {
+              "gender": "men",
+              "department": "apparel",
+              "category": "short sleeve tops",
+              "product_type": "t shirt",
+              "activity": "lifting",
+              "collection": "vintage legacy",
+              "color": "grey",
+              "fit": "oversized",
+              "support": null,
+              "features": [],
+              "season": "ss26",
+              "availability": "coming soon",
+              "category_path": [
+                "men",
+                "apparel",
+                "short sleeve tops",
+                "t shirt"
+              ]
+            }
+          }
+        },
+        {
+          "candidate_id": "p48",
+          "role": "bottom",
+          "why_this_item": "The black lightweight jogger adds breathable stretch and a practical taper for lifting without being overly tight.",
+          "product": {
+            "product_name": "Gymshark x CBUM Lightweight Jogger - Black",
+            "image_url": "https://cdn.shopify.com/s/files/1/0156/6146/files/images-GSxCBUMLightweightJoggerGSBlackA5B5L_BB2J_0804.jpg?v=1774284568",
+            "description": "Men's regular-fit black joggers from the Gymshark X Cbum range with lightweight stretchy fabric for warm-ups training and daily wear and clean athletic taper: physique focused but not restrictive for lifting.",
+            "product_link": "https://gymshark.com/products/gymshark-gs-x-cbum-lightweight-jogger-pants-black-ss26",
+            "categories": {
+              "gender": "men",
+              "department": "apparel",
+              "category": "pants",
+              "product_type": "joggers",
+              "activity": "lifting",
+              "collection": "gymshark x cbum",
+              "color": "black",
+              "fit": "regular fit",
+              "support": null,
+              "features": [
+                "lightweight",
+                "pockets"
+              ],
+              "season": "ss26",
+              "availability": "sale",
+              "category_path": [
+                "men",
+                "apparel",
+                "pants",
+                "joggers"
+              ]
+            }
+          }
+        },
+        {
+          "candidate_id": "p51",
+          "role": "accessory",
+          "why_this_item": "The black socks complete the set without changing the minimal palette.",
+          "product": {
+            "product_name": "Gymshark x CBUM Socks - Black",
+            "image_url": "https://cdn.shopify.com/s/files/1/0156/6146/files/images-GymsharkxCBUMSockGSBlackI2C7R_BB2J_0181_V1.jpg?v=1773930043",
+            "description": "Women's black socks from the Gymshark X Cbum range with cbum's perfect midi crew sock length and 'unfinished' wordmark across the ribbed cuffs for lifting.",
+            "product_link": "https://gymshark.com/products/gymshark-gs-x-cbum-socks-socks-black-ss26",
+            "categories": {
+              "gender": "women",
+              "department": "accessories",
+              "category": "socks",
+              "product_type": "socks",
+              "activity": "lifting",
+              "collection": "gymshark x cbum",
+              "color": "black",
+              "fit": null,
+              "support": null,
+              "features": [],
+              "season": "ss26",
+              "availability": "sale",
+              "category_path": [
+                "women",
+                "accessories",
+                "socks"
+              ]
+            }
+          }
+        }
+      ],
+      "why_this_set": "A black and grey lifting set built around an oversized top, breathable tapered bottoms, and a low-distraction accessory.",
+      "preference_alignment": [
+        "Uses neutral black and grey items.",
+        "Keeps the silhouette relaxed on top and practical through the bottom."
+      ],
+      "query_alignment": [
+        "All selected items are tagged for lifting.",
+        "The jogger includes lightweight fabric for breathability."
+      ],
+      "visual_alignment": [
+        "Designed to complement a minimal black or grey reference image."
+      ],
+      "tradeoffs": [
+        "The top has vintage distressing, so it is less polished than a plain performance tee."
+      ],
+      "confidence_score": 0.91
+    }
+  ]
+}

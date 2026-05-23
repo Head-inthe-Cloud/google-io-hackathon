@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recommendation Test</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #202124;
+      background: #f6f7f8;
+      line-height: 1.45;
+    }
+
+    main {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    section {
+      background: #fff;
+      border: 1px solid #d9dde1;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin: 0 0 16px;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin: 0 0 12px;
+    }
+
+    h3,
+    p {
+      margin: 0;
+    }
+
+    ul,
+    ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .products {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .product {
+      border: 1px solid #d9dde1;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .product img {
+      width: 100%;
+      height: 360px;
+      object-fit: cover;
+      background: #eef0f2;
+      display: block;
+    }
+
+    .product-body {
+      padding: 14px;
+    }
+
+    .role {
+      color: #0f766e;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .reason {
+      color: #5f6368;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+
+    .score {
+      margin-top: 8px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .trace li + li {
+      margin-top: 8px;
+    }
+
+    @media (max-width: 760px) {
+      .products {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Recommendation Test</h1>
+
+    <section>
+      <h2>Query</h2>
+      <p id="query"></p>
+    </section>
+
+    <section>
+      <h2>Preference Policy</h2>
+      <ul id="preference-policy"></ul>
+    </section>
+
+    <section>
+      <h2>Recommendations</h2>
+      <div id="recommendation" class="products"></div>
+    </section>
+
+    <section>
+      <h2>Core Agentic Trace</h2>
+      <ol id="trace" class="trace"></ol>
+    </section>
+  </main>
+
+  <script>
+    const endpoint = "http://localhost:8001/api/recommend/stream";
+    const requestEndpoint = "http://localhost:8001/api/example-request";
+    const queryEl = document.getElementById("query");
+    const policyEl = document.getElementById("preference-policy");
+    const recommendationEl = document.getElementById("recommendation");
+    const traceEl = document.getElementById("trace");
+
+    function renderRequest(request) {
+      queryEl.textContent = request.query;
+      policyEl.replaceChildren();
+      request.preference_stack.split("\n").forEach((line) => {
+        const item = document.createElement("li");
+        item.textContent = line;
+        policyEl.appendChild(item);
+      });
+    }
+
+    function addTrace(text) {
+      const item = document.createElement("li");
+      item.textContent = text;
+      traceEl.appendChild(item);
+    }
+
+    function renderProducts(result) {
+      recommendationEl.replaceChildren();
+      const productSets = result.product_sets || [];
+      if (!productSets.length) {
+        addTrace("No product sets returned.");
+        return;
+      }
+
+      productSets.forEach((productSet, setIndex) => {
+        productSet.items.forEach((item) => {
+          const product = item.product || {};
+          const card = document.createElement("article");
+          card.className = "product";
+
+          const image = document.createElement("img");
+          image.src = product.image_url || "";
+          image.alt = product.product_name || item.role || "Recommended product";
+          card.appendChild(image);
+
+          const body = document.createElement("div");
+          body.className = "product-body";
+
+          const role = document.createElement("div");
+          role.className = "role";
+          role.textContent = `${productSet.set_name || `Set ${setIndex + 1}`} · ${item.role || "Item"}`;
+          body.appendChild(role);
+
+          const name = document.createElement("h3");
+          name.textContent = product.product_name || "Recommended product";
+          body.appendChild(name);
+
+          const reason = document.createElement("p");
+          reason.className = "reason";
+          reason.textContent = item.why_this_item || product.description || "";
+          body.appendChild(reason);
+
+          if (typeof item.recommendation_score === "number") {
+            const score = document.createElement("p");
+            score.className = "score";
+            score.textContent = `Score: ${Math.round(item.recommendation_score * 100)}%`;
+            body.appendChild(score);
+          }
+
+          card.appendChild(body);
+          recommendationEl.appendChild(card);
+        });
+      });
+    }
+
+    function traceFromEvent(eventName, data) {
+      if (eventName === "context_compiler.completed") {
+        const context = data.shopping_context || {};
+        return `Context compiled: ${context.goal || "shopping goal created"}`;
+      }
+      if (eventName === "branch_retrieval.completed") {
+        return `Search branch ${data.branch_id}: ${data.candidate_count} candidates found`;
+      }
+      if (eventName === "set_builder.completed") {
+        return `Set builder: ${data.proposed_product_set_count} product sets proposed`;
+      }
+      if (eventName === "text_retrieval.completed") {
+        return `Text retrieval: top ${data.top_text_candidate_count} candidates selected for image scoring`;
+      }
+      if (eventName === "candidate_image_scoring.completed") {
+        return `Image scoring: ${data.scored_candidate_count} candidates scored individually`;
+      }
+      if (eventName === "critic.completed") {
+        return `Critic: ${data.approved_product_set_count} approved, ${data.rejected_product_set_count} rejected`;
+      }
+      if (eventName === "completed") {
+        return `Completed: ${data.product_set_count} product sets returned`;
+      }
+      if (eventName === "error") {
+        return `Error: ${data.message}`;
+      }
+      return null;
+    }
+
+    function handleSseBlock(block) {
+      const lines = block.split("\n");
+      const eventLine = lines.find((line) => line.startsWith("event: "));
+      const dataLine = lines.find((line) => line.startsWith("data: "));
+      if (!eventLine || !dataLine) return;
+
+      const eventName = eventLine.slice(7);
+      const data = JSON.parse(dataLine.slice(6));
+      const trace = traceFromEvent(eventName, data);
+      if (trace) addTrace(trace);
+      if (eventName === "result") renderProducts(data.result);
+    }
+
+    async function loadRequest() {
+      const response = await fetch(requestEndpoint);
+      return response.json();
+    }
+
+    async function runLiveQuery() {
+      const request = await loadRequest();
+      renderRequest(request);
+      recommendationEl.textContent = "";
+      traceEl.replaceChildren();
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(request)
+      });
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const {value, done} = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, {stream: true});
+        const blocks = buffer.split("\n\n");
+        buffer = blocks.pop();
+        blocks.forEach(handleSseBlock);
+      }
+
+      if (buffer.trim()) handleSseBlock(buffer.trim());
+    }
+
+    runLiveQuery().catch((error) => addTrace(`Error: ${error.message}`));
+  </script>
+</body>
+</html>
