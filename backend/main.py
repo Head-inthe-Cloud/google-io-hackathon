@@ -1,291 +1,465 @@
 import os
-import shutil
+import json
+import uuid
+from pathlib import Path
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Depends, Query, File, UploadFile
+from fastapi import FastAPI, HTTPException, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from sqlalchemy import text, select
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 
 from database import engine, SessionLocal, Base, get_db
-from models import ClosetItem, Outfit
-from services import s3 as s3_service
+from models import CatalogItem, ShopperSession, Outfit
 from services import gemini as gemini_service
 from services import replicate_service
 
-# Lifespan context manager for startup and shutdown
+# ---------------------------------------------------------------------------
+# Catalog seeding helper
+# ---------------------------------------------------------------------------
+CATALOG_JSON_PATH = Path(__file__).resolve().parent.parent / "gymshark_closet_inventory.json"
+
+
+def seed_catalog(db: Session):
+    """Load catalog items from JSON into DB if the table is empty."""
+    if db.query(CatalogItem).count() > 0:
+        print(f"Catalog already seeded ({db.query(CatalogItem).count()} items). Skipping.")
+        return
+
+    if not CATALOG_JSON_PATH.exists():
+        print(f"Warning: catalog file not found at {CATALOG_JSON_PATH}. Skipping seed.")
+        return
+
+    with open(CATALOG_JSON_PATH, "r") as f:
+        data = json.load(f)
+
+    count = 0
+    for gender in ["mens", "womens"]:
+        for item in data.get(gender, []):
+            db.add(CatalogItem(
+                name=item["name"],
+                image_url=item["image_url"],
+                description=item.get("description"),
+                category=item["category"],
+                gender=gender,
+            ))
+            count += 1
+
+    db.commit()
+    print(f"Seeded {count} catalog items from {CATALOG_JSON_PATH.name}.")
+
+
+# ---------------------------------------------------------------------------
+# Lifespan
+# ---------------------------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup tasks
     print("Starting ClosetAI Backend...")
+
+    # pgvector extension
     try:
-        # Enable pgvector extension inside PostgreSQL if it exists
         with SessionLocal() as db:
             db.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
             db.commit()
             print("Verified PostgreSQL vector extension.")
     except Exception as e:
-        print(f"Note: Could not automatically verify pgvector extension (might not be a pg database or missing superuser privileges): {e}")
+        print(f"Note: pgvector extension check skipped: {e}")
 
+    # Create tables
     try:
-        # Create all tables
         Base.metadata.create_all(bind=engine)
         print("Database schemas created.")
     except Exception as e:
         print(f"Warning: Database table creation failed: {e}")
-        
-    # Ensure static directory exists for mock uploads
-    os.makedirs("./static/uploads", exist_ok=True)
+
+    # Seed catalog
+    try:
+        with SessionLocal() as db:
+            seed_catalog(db)
+    except Exception as e:
+        print(f"Warning: Catalog seeding failed: {e}")
+
     yield
-    # Shutdown tasks
     print("Shutting down ClosetAI Backend...")
 
+
+# ---------------------------------------------------------------------------
+# App
+# ---------------------------------------------------------------------------
 app = FastAPI(title="ClosetAI Backend", lifespan=lifespan)
 
-# Allow Next.js frontend to connect (local development and custom origins)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, restrict this to your Next.js domain
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Serve local static uploads directory so mock uploads can be previewed directly
-# Since static/ is at the root, and we are running from backend/, go up one level
-app.mount("/static", StaticFiles(directory="../static"), name="static")
+# ---------------------------------------------------------------------------
+# Pydantic Schemas
+# ---------------------------------------------------------------------------
 
-# --- Schemas ---
+# -- Sessions --
+class CreateSessionRequest(BaseModel):
+    selfie_url: Optional[str] = None
+    gender_preference: Optional[str] = None
+    favorite_colors: Optional[List[str]] = None
+    disliked_styles: Optional[List[str]] = None
+    occasion: Optional[str] = None
+    notes: Optional[str] = None
 
-class ProcessItemRequest(BaseModel):
-    user_id: str
-    file_url: str
+class UpdateSessionRequest(BaseModel):
+    selfie_url: Optional[str] = None
+    gender_preference: Optional[str] = None
+    favorite_colors: Optional[List[str]] = None
+    disliked_styles: Optional[List[str]] = None
+    occasion: Optional[str] = None
+    notes: Optional[str] = None
 
-class GenerateOutfitRequest(BaseModel):
-    user_id: str
+# -- Recommendations --
+class RecommendRequest(BaseModel):
     prompt: str
-    weather_context: Optional[str] = "70°F, Sunny"
+    image_prompt_url: Optional[str] = None
+    partner_image_url: Optional[str] = None
+    occasion: Optional[str] = None
+    weather_context: Optional[str] = None
 
+# -- Virtual Try-On --
 class VirtualTryOnRequest(BaseModel):
-    user_id: str
     selfie_url: str
     garment_url: str
 
-# --- Endpoints ---
+class BatchTryOnOutfit(BaseModel):
+    outfit_id: str
+    garment_urls: List[str]
 
-@app.get("/api/upload-url")
-def get_upload_url(filename: str = Query(..., description="The name of the file to be uploaded")):
-    """
-    Generates a secure, pre-signed AWS S3 URL.
-    If S3 keys are missing, gracefully falls back to a mock local upload endpoint.
-    """
-    url_details = s3_service.generate_presigned_url(filename)
-    if not url_details:
-        raise HTTPException(status_code=500, detail="Failed to generate upload URL")
-    return url_details
+class BatchTryOnRequest(BaseModel):
+    session_token: str
+    selfie_url: str
+    outfits: List[BatchTryOnOutfit]
 
-@app.post("/api/mock-upload")
-async def mock_upload(file: UploadFile = File(...)):
-    """
-    Fallback endpoint to accept direct local file uploads when S3 is not configured.
-    """
-    upload_dir = "./static/uploads"
-    os.makedirs(upload_dir, exist_ok=True)
-    
-    file_path = os.path.join(upload_dir, file.filename)
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-        
-    local_url = f"http://localhost:8000/static/uploads/{file.filename}"
+# -- Guardrail --
+class GuardrailCheckRequest(BaseModel):
+    outfit_id: str
+    tryon_image_url: str
+    selfie_url: str
+    garment_urls: List[str]
+
+# -- Rank Outfits --
+class RankOutfitsRequest(BaseModel):
+    session_token: str
+    outfits: List[Dict[str, Any]]
+    guardrail_results: Optional[List[Dict[str, Any]]] = None
+
+
+# ===========================================================================
+# ENDPOINTS
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# 1. Catalog (read-only)
+# ---------------------------------------------------------------------------
+@app.get("/api/catalog")
+def list_catalog(
+    gender: Optional[str] = Query(None, description="Filter by gender: mens or womens"),
+    category: Optional[str] = Query(None, description="Filter by category: Tops, Bottoms, etc."),
+    db: Session = Depends(get_db),
+):
+    """Browse the store catalog with optional filters."""
+    query = db.query(CatalogItem)
+    if gender:
+        query = query.filter(CatalogItem.gender == gender)
+    if category:
+        query = query.filter(CatalogItem.category == category)
+
+    items = query.all()
     return {
-        "status": "success",
-        "file_url": local_url,
-        "filename": file.filename
+        "count": len(items),
+        "items": [_serialize_catalog_item(i) for i in items],
     }
 
-@app.post("/api/process-item")
-def process_item(request: ProcessItemRequest, db: Session = Depends(get_db)):
-    """
-    Triggered after successful image upload.
-    Coordinates SAM-2/Rembg cropping, Gemini 1.5 categorization, 
-    and Vector Embeddings insertion to pgvector.
-    """
-    try:
-        file_url = request.file_url
-        
-        # 1. OPTIONAL: Crop individual item from image using Replicate/SAM-2 style background removal
-        cropped_url = replicate_service.crop_item_with_sam2(file_url)
-        active_url = cropped_url if cropped_url else file_url
-        
-        # 2. ANALYSIS: Feed cropped/processed image to Gemini 1.5 to get structured attributes
-        metadata = gemini_service.analyze_clothing_item(active_url)
-        
-        # 3. EMBEDDING: Formulate a semantic text summary of the clothing piece and embed it with text-embedding-004
-        tags_str = ", ".join(metadata.get("style_tags", []))
-        embedding_source_text = f"A {metadata.get('color', 'unknown')} {metadata.get('sub_category', 'item')} for {metadata.get('season', 'all-season')} wear. Tags: {tags_str}"
-        
-        style_vector = gemini_service.get_style_embedding(embedding_source_text)
-        
-        # 4. DATABASE: Store new closet item
-        db_item = ClosetItem(
-            user_id=request.user_id,
-            s3_image_url=active_url,
-            category=metadata.get("category"),
-            sub_category=metadata.get("sub_category"),
-            color=metadata.get("color"),
-            season=metadata.get("season"),
-            style_tags=metadata.get("style_tags", []),
-            style_vector=style_vector
-        )
-        
-        db.add(db_item)
-        db.commit()
-        db.refresh(db_item)
-        
-        return {
-            "status": "success",
-            "item_id": db_item.id,
-            "extracted_data": {
-                "category": db_item.category,
-                "sub_category": db_item.sub_category,
-                "color": db_item.color,
-                "season": db_item.season,
-                "style_tags": db_item.style_tags,
-                "s3_image_url": db_item.s3_image_url
-            }
-        }
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to process closet item: {str(e)}")
 
-@app.post("/api/generate-outfit")
-def generate_outfit(request: GenerateOutfitRequest, db: Session = Depends(get_db)):
+@app.get("/api/catalog/{item_id}")
+def get_catalog_item(item_id: int, db: Session = Depends(get_db)):
+    """Get a single catalog item by ID."""
+    item = db.query(CatalogItem).filter(CatalogItem.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return _serialize_catalog_item(item)
+
+
+# ---------------------------------------------------------------------------
+# 2. Shopper Sessions
+# ---------------------------------------------------------------------------
+@app.post("/api/sessions")
+def create_session(request: CreateSessionRequest, db: Session = Depends(get_db)):
+    """Create a new shopper session."""
+    token = str(uuid.uuid4())
+    session = ShopperSession(
+        session_token=token,
+        selfie_url=request.selfie_url,
+        gender_preference=request.gender_preference,
+        favorite_colors=request.favorite_colors,
+        disliked_styles=request.disliked_styles,
+        occasion=request.occasion,
+        notes=request.notes,
+    )
+    db.add(session)
+    db.commit()
+    db.refresh(session)
+    return {"session_id": session.id, "session_token": session.session_token}
+
+
+@app.get("/api/sessions/{session_token}")
+def get_session(session_token: str, db: Session = Depends(get_db)):
+    """Retrieve a shopper session by token."""
+    session = _get_session_or_404(session_token, db)
+    return _serialize_session(session)
+
+
+@app.patch("/api/sessions/{session_token}")
+def update_session(session_token: str, request: UpdateSessionRequest, db: Session = Depends(get_db)):
+    """Update shopper preferences mid-session."""
+    session = _get_session_or_404(session_token, db)
+    for field, value in request.model_dump(exclude_unset=True).items():
+        setattr(session, field, value)
+    db.commit()
+    db.refresh(session)
+    return _serialize_session(session)
+
+
+# ---------------------------------------------------------------------------
+# 3. Outfit Recommendation
+# ---------------------------------------------------------------------------
+@app.post("/api/sessions/{session_token}/recommend")
+def recommend_outfits(session_token: str, request: RecommendRequest, db: Session = Depends(get_db)):
     """
-    Performs pgvector similarity matching against user's closet items
-    and uses Gemini to construct 3 elegant outfit combinations.
+    Generate outfit recommendations from the store catalog.
+    TODO: Wire up the full agent pipeline (Intent → Matching → Fashion Master).
+    Currently uses a basic Gemini call as a placeholder.
     """
+    session = _get_session_or_404(session_token, db)
+
+    # --- Retrieve candidate catalog items ---
+    query = db.query(CatalogItem)
+    if session.gender_preference:
+        query = query.filter(CatalogItem.gender == session.gender_preference)
+
+    # Try vector search first, fall back to full catalog
     try:
-        # 1. Generate text embedding of the styling prompt
         prompt_vector = gemini_service.get_style_embedding(request.prompt)
-        
-        # 2. Vector search via pgvector to retrieve top matching items
-        # Fallback query if vector similarity is not supported or raises an error
-        try:
-            # cosine_distance is standard in pgvector
-            closet_items_query = db.query(ClosetItem)\
-                .filter(ClosetItem.user_id == request.user_id)\
-                .order_by(ClosetItem.style_vector.cosine_distance(prompt_vector))\
-                .limit(15).all()
-        except Exception as vec_err:
-            print(f"Vector search failed (falling back to conventional database query): {vec_err}")
-            # Fallback to standard selection
-            closet_items_query = db.query(ClosetItem).filter(ClosetItem.user_id == request.user_id).limit(20).all()
-            
-        if not closet_items_query:
-            return {
-                "message": "No clothing items found in your closet yet. Please upload items first!",
-                "outfits": []
-            }
-            
-        # Convert DB models to pure dictionary representations for Gemini service
-        serialized_items = []
-        for item in closet_items_query:
-            serialized_items.append({
-                "id": item.id,
-                "category": item.category,
-                "sub_category": item.sub_category,
-                "color": item.color,
-                "season": item.season,
-                "style_tags": item.style_tags,
-                "s3_image_url": item.s3_image_url
-            })
-            
-        # 3. Call Gemini acting as a personal stylist to design outfits
-        weather = request.weather_context or "70°F, Sunny"
-        outfits = gemini_service.design_outfits_with_gemini(request.prompt, weather, serialized_items)
-        
-        # 4. Optional: Save outfits history to DB
-        for outfit in outfits:
-            item_ids = [itm["item_id"] for itm in outfit.get("items", [])]
-            db_outfit = Outfit(
-                user_id=request.user_id,
-                description=outfit.get("description"),
-                item_ids=item_ids
-            )
-            db.add(db_outfit)
-        db.commit()
-        
-        return {
-            "outfits": outfits
-        }
-        
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to generate outfits: {str(e)}")
+        candidates = (
+            query
+            .filter(CatalogItem.style_vector.isnot(None))
+            .order_by(CatalogItem.style_vector.cosine_distance(prompt_vector))
+            .limit(20)
+            .all()
+        )
+        # If no items have vectors yet, fall back
+        if not candidates:
+            candidates = query.limit(30).all()
+    except Exception:
+        candidates = query.limit(30).all()
 
+    if not candidates:
+        return {"outfits": [], "top_choice": None, "optional_purchase_tip": None}
+
+    serialized = [_serialize_catalog_item(i) for i in candidates]
+
+    # --- Call Gemini stylist (placeholder until agent is wired) ---
+    # TODO: Replace with Intent Understanding Agent → Clothes Matching Agent → Fashion Master Agent
+    weather = request.weather_context or ""
+    occasion = request.occasion or session.occasion or ""
+    full_prompt = request.prompt
+    if occasion:
+        full_prompt += f"\nOccasion: {occasion}"
+    if weather:
+        full_prompt += f"\nWeather: {weather}"
+    if session.favorite_colors:
+        full_prompt += f"\nPreferred colors: {', '.join(session.favorite_colors)}"
+    if session.disliked_styles:
+        full_prompt += f"\nAvoid styles: {', '.join(session.disliked_styles)}"
+    if session.notes:
+        full_prompt += f"\nAdditional notes: {session.notes}"
+
+    outfits = gemini_service.design_outfits_with_gemini(full_prompt, weather, serialized)
+
+    # Persist outfits to DB
+    for outfit in outfits:
+        item_ids = [itm.get("item_id") for itm in outfit.get("items", [])]
+        db.add(Outfit(
+            session_id=session.id,
+            outfit_id_label=outfit.get("outfit_id"),
+            item_ids=item_ids,
+            reason=outfit.get("reason") or outfit.get("description"),
+            style_tags=outfit.get("style_tags"),
+            styling_tip=outfit.get("styling_tip"),
+            confidence_score=outfit.get("confidence_score"),
+        ))
+    db.commit()
+
+    return {
+        "outfits": outfits,
+        "top_choice": outfits[0]["outfit_id"] if outfits else None,
+        "optional_purchase_tip": None,  # TODO: Fashion Master Agent populates this
+    }
+
+
+# ---------------------------------------------------------------------------
+# 4. Virtual Try-On
+# ---------------------------------------------------------------------------
 @app.post("/api/virtual-try-on")
 def virtual_try_on(request: VirtualTryOnRequest):
-    """
-    Submits a serverless virtual try-on prediction on Replicate (IDM-VTON).
-    """
+    """Single garment virtual try-on via Replicate IDM-VTON."""
     try:
-        response = replicate_service.trigger_virtual_tryon(
+        return replicate_service.trigger_virtual_tryon(
             selfie_url=request.selfie_url,
-            garment_url=request.garment_url
+            garment_url=request.garment_url,
         )
-        return response
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to launch try-on request: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/try-on/status/{prediction_id}")
+
+@app.post("/api/virtual-try-on/batch")
+def batch_virtual_try_on(request: BatchTryOnRequest):
+    """
+    Trigger try-on jobs for multiple outfits in one call.
+    Sends one try-on per outfit (using the first garment URL).
+    TODO: Support composite multi-garment try-on when agent is ready.
+    """
+    jobs = []
+    for outfit in request.outfits:
+        if not outfit.garment_urls:
+            continue
+        try:
+            result = replicate_service.trigger_virtual_tryon(
+                selfie_url=request.selfie_url,
+                garment_url=outfit.garment_urls[0],  # primary garment
+            )
+            jobs.append({
+                "outfit_id": outfit.outfit_id,
+                "replicate_id": result.get("replicate_id"),
+                "status": result.get("status", "processing"),
+            })
+        except Exception as e:
+            jobs.append({
+                "outfit_id": outfit.outfit_id,
+                "replicate_id": None,
+                "status": "error",
+                "error": str(e),
+            })
+    return {"jobs": jobs}
+
+
+@app.get("/api/virtual-try-on/status/{prediction_id}")
 def try_on_status(prediction_id: str):
-    """
-    Polls the status of a specific virtual try-on generation on Replicate.
-    """
+    """Poll the status of a virtual try-on job."""
     try:
-        status_info = replicate_service.get_prediction_status(prediction_id)
-        return status_info
+        return replicate_service.get_prediction_status(prediction_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to check try-on status: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/closet")
-def list_closet(user_id: str = Query(..., description="Filter items by user ID"), db: Session = Depends(get_db)):
-    """
-    Lists all closet items for a specific user.
-    """
-    try:
-        items = db.query(ClosetItem).filter(ClosetItem.user_id == user_id).all()
-        return {
-            "count": len(items),
-            "items": [
-                {
-                    "id": item.id,
-                    "s3_image_url": item.s3_image_url,
-                    "category": item.category,
-                    "sub_category": item.sub_category,
-                    "color": item.color,
-                    "season": item.season,
-                    "style_tags": item.style_tags,
-                    "created_at": item.created_at
-                }
-                for item in items
-            ]
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch closet: {str(e)}")
 
+# ---------------------------------------------------------------------------
+# 5. Agent Pipeline Stubs
+# ---------------------------------------------------------------------------
+@app.post("/api/guardrail-check")
+def guardrail_check(request: GuardrailCheckRequest):
+    """
+    Validate a try-on image for faithfulness.
+    TODO: Implement Guardrail Agent — compare generated image against inputs.
+    """
+    # Stub response
+    return {
+        "outfit_id": request.outfit_id,
+        "pass": True,
+        "faithfulness_score": 0.0,
+        "issues": [],
+        "_note": "Stub — Guardrail Agent not yet implemented.",
+    }
+
+
+@app.post("/api/rank-outfits")
+def rank_outfits(request: RankOutfitsRequest):
+    """
+    Fashion Master Agent — final ranking, styling tips, purchase suggestions.
+    TODO: Implement Fashion Master Agent.
+    """
+    # Stub: return outfits in the same order with placeholder ranking
+    ranked = []
+    for i, outfit in enumerate(request.outfits):
+        ranked.append({
+            **outfit,
+            "ranking": i + 1,
+        })
+    return {
+        "ranked_outfits": ranked,
+        "top_choice": ranked[0].get("outfit_id") if ranked else None,
+        "styling_tip": None,
+        "optional_purchase_tip": None,
+        "_note": "Stub — Fashion Master Agent not yet implemented.",
+    }
+
+
+# ---------------------------------------------------------------------------
+# 6. Health Check
+# ---------------------------------------------------------------------------
 @app.get("/")
-def health_check():
-    """Simple API health check endpoint."""
+def health_check(db: Session = Depends(get_db)):
+    """Health check with catalog stats."""
+    try:
+        catalog_count = db.query(CatalogItem).count()
+    except Exception:
+        catalog_count = -1
+
     return {
         "status": "ok",
         "service": "ClosetAI API",
+        "catalog_items": catalog_count,
         "features_enabled": {
-            "s3": os.getenv("AWS_ACCESS_KEY_ID") is not None,
             "gemini": os.getenv("GEMINI_API_KEY") is not None,
             "replicate": os.getenv("REPLICATE_API_TOKEN") is not None,
-            "database": os.getenv("DATABASE_URL") is not None
-        }
+            "database": os.getenv("DATABASE_URL") is not None,
+        },
     }
+
+
+# ===========================================================================
+# Helpers
+# ===========================================================================
+def _serialize_catalog_item(item: CatalogItem) -> Dict[str, Any]:
+    return {
+        "id": item.id,
+        "name": item.name,
+        "image_url": item.image_url,
+        "description": item.description,
+        "category": item.category,
+        "gender": item.gender,
+        "colors": item.colors,
+        "style_tags": item.style_tags,
+    }
+
+
+def _serialize_session(session: ShopperSession) -> Dict[str, Any]:
+    return {
+        "session_id": session.id,
+        "session_token": session.session_token,
+        "selfie_url": session.selfie_url,
+        "gender_preference": session.gender_preference,
+        "favorite_colors": session.favorite_colors,
+        "disliked_styles": session.disliked_styles,
+        "occasion": session.occasion,
+        "notes": session.notes,
+        "created_at": session.created_at.isoformat() if session.created_at else None,
+    }
+
+
+def _get_session_or_404(session_token: str, db: Session) -> ShopperSession:
+    session = db.query(ShopperSession).filter(
+        ShopperSession.session_token == session_token
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return session

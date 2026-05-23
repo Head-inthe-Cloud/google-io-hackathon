@@ -1,77 +1,83 @@
 # ClosetAI FastAPI Backend
 
-This is the FastAPI-based orchestration backend for ClosetAI. It handles:
-- **Pre-signed S3 URL generation** for secure frontend-to-S3 uploads.
-- **AI Background Removal/Cropping** via SAM-2 / Rembg on Replicate.
-- **Image Metadata Extraction** (category, color, season, style) using Google Gemini 1.5.
-- **Semantic Style Embeddings** via Google Gemini Text Embedding.
-- **Vector Similarity Search** using PostgreSQL & `pgvector` to match the best wardrobe items for styling prompts.
-- **Personalized Outfit Design** using Gemini 1.5 acting as a stylist.
-- **Virtual Try-On** orchestration using IDM-VTON on Replicate.
+An AI-powered styling backend for online retailers. The store's product catalog is pre-loaded from a JSON file, and the API serves outfit recommendations, virtual try-on, and shopper session management.
 
 ---
 
 ## Technical Stack
-- **Framework:** FastAPI, Uvicorn
-- **AI Models:** Google Gemini 1.5 Flash (via `google-genai` SDK for vision analysis & outfit generation), Google `text-embedding-004` (for vector embeddings), Replicate (`yisol/idm-vton` and `cjwbby/rembg`).
-- **Database:** PostgreSQL with `pgvector` (via SQLAlchemy)
-- **Object Storage:** AWS S3 (pre-signed upload URLs)
+- **Framework:** FastAPI + Uvicorn
+- **AI Models:** Google Gemini 2.0 Flash (via `google-genai` SDK), Replicate (IDM-VTON for try-on)
+- **Database:** PostgreSQL + pgvector (via SQLAlchemy)
 - **Package Manager:** `uv`
 
 ---
 
-## Setup & Running Local Development
+## Setup
 
 ### 1. Prerequisites
-Make sure you have:
-- Python 3.10+ (or Python 3.13)
-- `uv` package manager installed (`pip install uv` or standard installer)
-- A running PostgreSQL database with the `pgvector` extension installed.
+- Python 3.13+
+- `uv` package manager
+- PostgreSQL with the `pgvector` extension
 
-### 2. Configure Environment Variables
-Copy `.env.example` to `.env` and fill in your keys:
+### 2. Environment Variables
 ```bash
 cp .env.example .env
 ```
 
-Ensure you set:
-- `DATABASE_URL` (e.g., `postgresql://username:password@localhost:5432/closet_db`)
-- `GEMINI_API_KEY` (Get yours from Google AI Studio)
-- `REPLICATE_API_TOKEN` (Get yours from Replicate)
-- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_BUCKET_NAME` (For S3)
+Required keys:
+- `DATABASE_URL` — e.g. `postgresql://user:pass@localhost:5432/closet_db`
+- `GEMINI_API_KEY` — from Google AI Studio
+- `REPLICATE_API_TOKEN` — from Replicate (for virtual try-on)
 
-*Note: If AWS keys are omitted, the backend will automatically fallback to local file uploads (`/api/mock-upload`) and serve uploads out of the local `./static` folder.*
-
-### 3. Install Dependencies
-Run this in the `backend` folder to sync dependencies:
+### 3. Install & Run
 ```bash
+cd backend
 uv sync
+uv run uvicorn main:app --reload --port 8000
 ```
 
-### 4. Start the Server
-Run the FastAPI development server:
-```bash
-uv run uvicorn backend.main:app --reload
-```
-Alternatively, if you run inside the `backend` folder:
-```bash
-uv run uvicorn main:app --reload
-```
+On first startup the server auto-seeds the catalog from `gymshark_closet_inventory.json` at the project root.
+
+### 4. API Docs
+- Swagger: http://localhost:8000/docs
+- Redoc: http://localhost:8000/redoc
 
 ---
 
-## API Documentation
-Once the server is running, you can access:
-- **Interactive Swagger Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Alternative Redoc Docs:** [http://localhost:8000/redoc](http://localhost:8000/redoc)
+## API Surface
 
----
+### Catalog (read-only, served from DB)
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/catalog` | List items (filter: `gender`, `category`) |
+| `GET` | `/api/catalog/{item_id}` | Single item detail |
 
-## Main Endpoints Summary
+### Shopper Sessions
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/sessions` | Create session (selfie, prefs, occasion) |
+| `GET` | `/api/sessions/{session_token}` | Get session |
+| `PATCH` | `/api/sessions/{session_token}` | Update preferences |
 
-- `GET /api/upload-url?filename=test.jpg` - Generates direct AWS S3 PUT URL (falls back to local mock upload if AWS is not configured).
-- `POST /api/process-item` - Background crop + Gemini analysis + vector embedding + SQL storage.
-- `POST /api/generate-outfit` - Vector search + Gemini stylist composition.
-- `POST /api/virtual-try-on` - IDM-VTON try-on trigger.
-- `GET /api/try-on/status/{prediction_id}` - Poll try-on status on Replicate.
-- `GET /api/closet?user_id=123` - View all items in a user's closet.
+### Outfit Recommendation
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/sessions/{session_token}/recommend` | Generate outfit recommendations |
+
+### Virtual Try-On
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/virtual-try-on` | Single try-on |
+| `POST` | `/api/virtual-try-on/batch` | Batch try-on per recommendation |
+| `GET` | `/api/virtual-try-on/status/{prediction_id}` | Poll status |
+
+### Agent Pipeline Stubs
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/guardrail-check` | Validate try-on faithfulness (stub) |
+| `POST` | `/api/rank-outfits` | Fashion Master ranking (stub) |
+
+### Utility
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/` | Health check + catalog stats |
