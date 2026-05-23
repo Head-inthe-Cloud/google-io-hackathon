@@ -53,6 +53,7 @@ from services import gemini as gemini_service
 from services import guardrail_agent
 from services import replicate_service
 from services import s3
+from services import search_tree as search_tree_service
 
 
 # ---------------------------------------------------------------------------
@@ -387,6 +388,50 @@ def list_catalog(
 def list_categories():
     """Return available categories with item counts."""
     return {"categories": store.category_counts()}
+
+
+@app.get("/api/catalog/search-tree")
+def get_catalog_search_tree(
+    dataset: str = Query("current", description="Dataset name: 'current' (active in-memory), 'dataset2', or 'gymshark'")
+):
+    """
+    Get navigation tree and facets for catalog browsing.
+    Supports serving precomputed trees for larger datasets or dynamically generating for the active in-memory catalog.
+    """
+    # 1. Handle precomputed datasets
+    if dataset in ("dataset2", "gymshark"):
+        precomputed = search_tree_service.load_precomputed_search_tree(dataset)
+        if precomputed:
+            return precomputed
+
+    # 2. Fall back to building dynamically for the active in-memory catalog items
+    _, items = store.query_catalog(limit=50000)
+    return search_tree_service.get_search_tree_payload(items)
+
+
+@app.get("/api/catalog/facets")
+def get_catalog_facets(
+    dataset: str = Query("current", description="Dataset name: 'current' (active in-memory), 'dataset2', or 'gymshark'")
+):
+    """
+    Get computed facets (counts of values for color, activity, fit, collection, etc.) for filtering.
+    """
+    tree = get_catalog_search_tree(dataset)
+    return {"facets": tree.get("facets", {})}
+
+
+@app.get("/api/catalog/navigation")
+def get_catalog_navigation_tree(
+    dataset: str = Query("current", description="Dataset name: 'current' (active in-memory), 'dataset2', or 'gymshark'")
+):
+    """
+    Get hierarchical navigation tree for category and department browsing.
+    """
+    tree = get_catalog_search_tree(dataset)
+    return {
+        "navigation_order": tree.get("navigation_order", []),
+        "navigation_tree": tree.get("navigation_tree", [])
+    }
 
 
 @app.get("/api/catalog/{item_id}")

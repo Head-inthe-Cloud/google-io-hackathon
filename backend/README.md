@@ -101,6 +101,9 @@ Then open http://localhost:3000 — all API calls are automatically proxied to t
 | `GET` | `/api/catalog` | List items (filter: `gender`, `category`, `search`, `color`, `activity`, `collection`; paginate: `limit`, `offset`) |
 | `GET` | `/api/catalog/categories` | Category counts |
 | `GET` | `/api/catalog/{item_id}` | Single item detail |
+| `GET` | `/api/catalog/search-tree` | Search tree & facets payload (query parameter: `dataset` - 'current' \| 'dataset2' \| 'gymshark') |
+| `GET` | `/api/catalog/facets` | List of computed counts for all facet fields (query parameter: `dataset`) |
+| `GET` | `/api/catalog/navigation` | Hierarchical navigation tree for nested category browsing (query parameter: `dataset`) |
 
 ### Frontend-Compatible Endpoints
 | Method | Path | Description |
