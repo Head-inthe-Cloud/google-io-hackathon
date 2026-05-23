@@ -9,6 +9,7 @@ startup and lives only for the lifetime of the process.
 from __future__ import annotations
 
 import json
+import os
 import uuid
 import datetime
 from pathlib import Path
@@ -17,7 +18,19 @@ from typing import Any, Dict, List, Optional
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
-CATALOG_JSON_PATH = Path(__file__).resolve().parent.parent / "data" / "gymshark_closet_inventory.json"
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+CATALOG_DATASET = os.getenv("CATALOG_DATASET", "dataset2").lower()
+CATALOG_JSON_PATHS = {
+    "dataset2": DATA_DIR / "dataset2_products.json",
+    "gymshark": DATA_DIR / "gymshark_closet_inventory.json",
+}
+
+
+def _catalog_json_path() -> Path:
+    override = os.getenv("CATALOG_JSON_PATH")
+    if override:
+        return Path(override).expanduser()
+    return CATALOG_JSON_PATHS.get(CATALOG_DATASET, CATALOG_JSON_PATHS["dataset2"])
 
 # ---------------------------------------------------------------------------
 # In-memory tables
@@ -33,19 +46,68 @@ _next_outfit_db_id = 1
 
 # ===== Catalog ==============================================================
 
-def seed_catalog() -> int:
-    """Load catalog items from JSON. Returns count of items loaded."""
+def _display_category(product: Dict[str, Any]) -> str:
+    categories = product.get("categories") or {}
+    category = categories.get("category") or product.get("category")
+    product_type = categories.get("product_type") or product.get("product_type")
+    department = categories.get("department")
+    values = {str(value or "").lower() for value in [category, product_type, department]}
+
+    if values & {"shoes", "boots", "sandals", "heels", "sneakers"}:
+        return "Shoes"
+    if values & {"accessories", "bag", "belt", "hat", "cap", "socks", "jewelry"}:
+        return "Accessories"
+    if values & {"bottoms", "pants", "jeans", "shorts", "leggings", "sweatpants", "joggers", "skirt"}:
+        return "Bottoms"
+    if values & {"outerwear", "jacket", "coat", "blazer"}:
+        return "Outerwear"
+    return "Tops"
+
+
+def _display_gender(value: Optional[str]) -> str:
+    normalized = (value or "unisex").lower()
+    if normalized in {"men", "mens", "man", "male"}:
+        return "mens"
+    if normalized in {"women", "womens", "woman", "female"}:
+        return "womens"
+    return "unisex"
+
+
+def _seed_dataset2(data: List[Dict[str, Any]]) -> int:
     global _next_catalog_id
-    if _catalog_items:
-        return len(_catalog_items)
+    count = 0
+    for product in data:
+        categories = product.get("categories") or {}
+        cid = _next_catalog_id
+        _next_catalog_id += 1
+        color = categories.get("color")
+        features = categories.get("features") or []
+        brand = categories.get("brand") or categories.get("store") or "Dataset 2"
+        _catalog_items[cid] = {
+            "id": cid,
+            "name": product.get("product_name") or "Unknown Product",
+            "image_url": product.get("image_url"),
+            "description": product.get("description"),
+            "category": _display_category(product),
+            "gender": _display_gender(categories.get("gender")),
+            "color": color,
+            "fit": categories.get("fit") or categories.get("product_type"),
+            "activity": categories.get("activity"),
+            "collection": categories.get("collection") or categories.get("store"),
+            "product_link": product.get("product_link"),
+            "colors": [color] if color else None,
+            "style_tags": [str(feature) for feature in features if feature],
+            "style_vector": None,
+            "brand": str(brand).replace("_", " ").title(),
+            "source_store": categories.get("store"),
+            "created_at": datetime.datetime.utcnow().isoformat(),
+        }
+        count += 1
+    return count
 
-    if not CATALOG_JSON_PATH.exists():
-        print(f"Warning: catalog file not found at {CATALOG_JSON_PATH}")
-        return 0
 
-    with open(CATALOG_JSON_PATH) as f:
-        data = json.load(f)
-
+def _seed_gymshark_inventory(data: Dict[str, Any]) -> int:
+    global _next_catalog_id
     count = 0
     for gender in ("mens", "womens"):
         for item in data.get(gender, []):
@@ -66,11 +128,32 @@ def seed_catalog() -> int:
                 "colors": None,
                 "style_tags": None,
                 "style_vector": None,
+                "brand": "Gymshark",
                 "created_at": datetime.datetime.utcnow().isoformat(),
             }
             count += 1
+    return count
 
-    print(f"Seeded {count} catalog items from {CATALOG_JSON_PATH.name}.")
+
+def seed_catalog() -> int:
+    """Load catalog items from JSON. Returns count of items loaded."""
+    if _catalog_items:
+        return len(_catalog_items)
+
+    catalog_path = _catalog_json_path()
+    if not catalog_path.exists():
+        print(f"Warning: catalog file not found at {catalog_path}")
+        return 0
+
+    with open(catalog_path) as f:
+        data = json.load(f)
+
+    if isinstance(data, list):
+        count = _seed_dataset2(data)
+    else:
+        count = _seed_gymshark_inventory(data)
+
+    print(f"Seeded {count} catalog items from {catalog_path.name}.")
     return count
 
 

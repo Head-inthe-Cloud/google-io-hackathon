@@ -5,10 +5,11 @@ services:
     ports:
       - "8001:8000"
     environment:
-      CATALOG_PATH: /data/gymshark_products.json
+      CATALOG_PATH: /data/dataset2_products.json
       GYMSHARK_CATALOG_PATH: /data/gymshark_products.json
       DATASET2_CATALOG_PATH: /data/dataset2_products.json
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash}
       RECOMMENDER_MODEL: ${RECOMMENDER_MODEL:-gemini-3.5-flash}
     volumes:
       - ./data:/data:ro

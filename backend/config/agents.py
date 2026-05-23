@@ -1,7 +1,11 @@
 """Centralized model IDs and thresholds for agent pipeline."""
 
-TRYON_MODEL = "gemini-3.1-flash-image-preview"
-GUARDRAIL_MODEL = "gemini-3.5-flash"
+import os
+
+
+PRIMARY_GEMINI_MODEL = os.getenv("GEMINI_MODEL") or os.getenv("RECOMMENDER_MODEL") or "gemini-3.5-flash"
+TRYON_MODEL = os.getenv("TRYON_MODEL") or PRIMARY_GEMINI_MODEL
+GUARDRAIL_MODEL = os.getenv("GUARDRAIL_MODEL") or PRIMARY_GEMINI_MODEL
 
 GUARDRAIL_PASS_THRESHOLD = 0.75
 

@@ -24,6 +24,7 @@ RUN uv pip install --system -r pyproject.toml
 
 # Copy backend source
 COPY backend/ /app/backend/
+COPY data/ /app/data/
 
 # Copy built frontend assets from Stage 1
 COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
@@ -31,5 +32,7 @@ COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 # Expose port and configure environment
 EXPOSE 8080
 ENV PORT=8080
+ENV CATALOG_DATASET=dataset2
+ENV GEMINI_MODEL=gemini-3.5-flash
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]

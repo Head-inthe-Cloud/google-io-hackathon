@@ -9,6 +9,10 @@ from typing import Dict, Any, List
 client = None
 
 
+def model_name() -> str:
+    return os.getenv("GEMINI_MODEL") or os.getenv("RECOMMENDER_MODEL") or "gemini-3.5-flash"
+
+
 def init_gemini():
     global client
     if client is not None:
@@ -75,7 +79,7 @@ def analyze_clothing_item(image_url: str) -> Dict[str, Any]:
         )
 
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model=model_name(),
             contents=[image_part, prompt],
             config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
@@ -163,7 +167,7 @@ def design_outfits_with_gemini(
         user_prompt += f"\n\nAvailable Catalog Items:\n{json.dumps(items_description)}"
 
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model=model_name(),
             contents=f"{system_instruction}\n\n{user_prompt}",
             config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
@@ -275,7 +279,7 @@ def verify_tryon_faithfulness(
         contents.append(prompt)
 
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model=model_name(),
             contents=contents,
             config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
@@ -297,4 +301,3 @@ def verify_tryon_faithfulness(
                 "artifact_check": 0.80
             }
         }
-

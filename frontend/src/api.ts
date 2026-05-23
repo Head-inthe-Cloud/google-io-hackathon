@@ -57,21 +57,43 @@ export interface BackendCatalogItem {
 
 /** Map a backend catalog item to the frontend ClosetItem format. */
 export function catalogItemToClosetItem(item: BackendCatalogItem): ClosetItem {
+  const normalizedCategory = (item.category || "").toLowerCase();
+
   // Map backend categories to frontend GarmentCategory
   const categoryMap: Record<string, GarmentCategory> = {
     "Tops": "Tops",
+    "tops": "Tops",
+    "knit tops": "Tops",
+    "wovens": "Tops",
+    "t shirt": "Tops",
     "Bottoms": "Bottoms",
+    "bottoms": "Bottoms",
+    "pants": "Bottoms",
+    "jeans": "Bottoms",
+    "shorts": "Bottoms",
+    "skirt": "Bottoms",
     "Outerwear": "Outerwear",
+    "outerwear": "Outerwear",
+    "jacket": "Outerwear",
+    "coat": "Outerwear",
     "Sports Bras": "Tops",       // Map to closest frontend category
     "Accessories": "Accessories",
+    "accessories": "Accessories",
+    "Shoes": "Shoes",
+    "shoes": "Shoes",
     "One-Piece": "Tops",         // Map to closest frontend category
   };
-  const mappedCategory = categoryMap[item.category] || "Tops";
+  const mappedCategory = categoryMap[item.category] || categoryMap[normalizedCategory] || "Tops";
 
   // Map backend gender to frontend gender
   const genderMap: Record<string, "male" | "female" | "unisex"> = {
     "mens": "male",
+    "men": "male",
+    "male": "male",
     "womens": "female",
+    "women": "female",
+    "female": "female",
+    "unisex": "unisex",
   };
 
   return {

@@ -5,7 +5,7 @@ Full API surface per docs/AGENT_WORKFLOW.md, docs/backend_api_surface.md,
 and docs/db_handoff_tryon_guardrail_agents.md.
 
 No PostgreSQL required — all data is stored in-memory (store.py).
-Catalog is seeded from gymshark_closet_inventory.json on startup.
+Catalog is seeded from the active catalog JSON on startup.
 """
 
 import os
@@ -110,7 +110,7 @@ def _serialize_catalog_item(item: Dict[str, Any]) -> Dict[str, Any]:
         "collection": item.get("collection"),
         "product_link": item.get("product_link"),
         "style_tags": item.get("style_tags"),
-        "brand": "Gymshark",
+        "brand": item.get("brand") or "Gymshark",
     }
 
 
@@ -978,7 +978,7 @@ def analyze_item(request: AnalyzeItemRequest):
             "Return only the raw JSON."
         )
         response = gemini_service.client.models.generate_content(
-            model="gemini-2.5-flash",
+            model=gemini_service.model_name(),
             contents=[image_part, prompt],
             config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
@@ -1021,6 +1021,7 @@ def frontend_recommend(request: FrontendRecommendRequest):
             if abs(val) > 0.35:
                 side = label.split(" vs ")[0] if val > 0 else label.split(" vs ")[1]
                 vector_guide += f"  * Prefer: {side} (weight: {abs(val):.2f})\n"
+    style_dna_section = f"- Style DNA:\n{vector_guide}" if vector_guide else ""
 
     formatted_closet = "\n".join(
         f"- [ID: {c.get('id', '?')}] {c.get('name', 'Item')} "
@@ -1054,7 +1055,7 @@ def frontend_recommend(request: FrontendRecommendRequest):
             f"Customer Details:\n"
             f"- Style Preferences: {preferences_str}\n"
             f"- Body & Color profile: {selfie_desc}\n"
-            f"{('- Style DNA:\n' + vector_guide) if vector_guide else ''}"
+            f"{style_dna_section}"
             f"- Occasion: {prompt}\n\n"
             f"Available Store Inventory:\n{formatted_closet}\n\n"
             f"Generate exactly 3 distinct outfit recommendations. Use items from the inventory (reference their IDs). "
@@ -1075,7 +1076,7 @@ def frontend_recommend(request: FrontendRecommendRequest):
         contents.append(system_prompt)
 
         response = gemini_service.client.models.generate_content(
-            model="gemini-2.5-flash",
+            model=gemini_service.model_name(),
             contents=contents,
             config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
@@ -1104,7 +1105,7 @@ def generate_try_on(request: GenerateTryOnRequest):
                 img_bytes = b64.b64decode(clean_b64)
                 image_part = types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg")
                 analysis = gemini_service.client.models.generate_content(
-                    model="gemini-2.5-flash",
+                    model=gemini_service.model_name(),
                     contents=[image_part, "Describe this person's key visual traits for a fashion template in 1-2 sentences."],
                 )
                 if analysis.text:
