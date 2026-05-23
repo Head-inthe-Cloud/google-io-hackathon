@@ -488,13 +488,20 @@ export default function App() {
       });
       if (data.imageUrl) {
         setGeneratedVisualUrl(data.imageUrl);
+        if (data.error) {
+          setVisualError(`Warning: ${data.error}`);
+        }
       } else if (data.simulatedUrl) {
         setGeneratedVisualUrl(data.simulatedUrl);
+        if (data.error) {
+          setVisualError(`Simulation active: ${data.error}`);
+        }
       } else {
         throw new Error("No image URL returned by the visualization service");
       }
     } catch (err: any) {
-      setVisualError("Fashion preview modeled successfully.");
+      console.error("Failed to generate image on backend:", err);
+      setVisualError(`Generation failed: ${err.message || err}. Showing fallback simulation.`);
       setGeneratedVisualUrl("https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600");
     } finally {
       setIsGeneratingVisual(false);
