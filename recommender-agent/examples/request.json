@@ -1,0 +1,10 @@
+{
+  "query": "Find me a black or grey lifting set that is breathable and works with my reference image.",
+  "preference_stack": "The shopper prefers minimal, understated gymwear with clean silhouettes.\nThey usually like black, grey, white, and muted neutral colors.\nThey prefer breathable and sweat wicking pieces for training.\nThey like oversized or relaxed tops with more practical fitted bottoms.\nThey avoid loud graphics, neon colors, and overly revealing pieces.\nThey usually shop for lifting, conditioning, and rest day outfits.",
+  "images": [],
+  "target_sets": 5,
+  "max_depth": 2,
+  "max_branches_per_layer": 12,
+  "candidates_per_branch": 24,
+  "include_debug": false
+}
