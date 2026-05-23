@@ -1,0 +1,5358 @@
+{
+  "total_products": 8730,
+  "navigation_order": [
+    "gender",
+    "department",
+    "category",
+    "product_type"
+  ],
+  "navigation_tree": [
+    {
+      "field": "gender",
+      "value": "women",
+      "label": "Women",
+      "count": 4776,
+      "children": [
+        {
+          "field": "department",
+          "value": "apparel",
+          "label": "Apparel",
+          "count": 4193,
+          "children": [
+            {
+              "field": "category",
+              "value": "sports bras",
+              "label": "Sports Bras",
+              "count": 650,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 603
+                },
+                {
+                  "field": "product_type",
+                  "value": "bralette",
+                  "label": "Bralette",
+                  "count": 38
+                },
+                {
+                  "field": "product_type",
+                  "value": "square neck",
+                  "label": "Square Neck",
+                  "count": 8
+                },
+                {
+                  "field": "product_type",
+                  "value": "leggings",
+                  "label": "Leggings",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "shorts",
+              "label": "Shorts",
+              "count": 558,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "shorts",
+                  "label": "Shorts",
+                  "count": 541
+                },
+                {
+                  "field": "product_type",
+                  "value": "tight",
+                  "label": "Tight",
+                  "count": 7
+                },
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 6
+                },
+                {
+                  "field": "product_type",
+                  "value": "skort",
+                  "label": "Skort",
+                  "count": 4
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "leggings",
+              "label": "Leggings",
+              "count": 555,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "leggings",
+                  "label": "Leggings",
+                  "count": 501
+                },
+                {
+                  "field": "product_type",
+                  "value": "full length",
+                  "label": "Full Length",
+                  "count": 46
+                },
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 5
+                },
+                {
+                  "field": "product_type",
+                  "value": "joggers",
+                  "label": "Joggers",
+                  "count": 3
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "short sleeve tops",
+              "label": "Short Sleeve Tops",
+              "count": 524,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "t shirt",
+                  "label": "T Shirt",
+                  "count": 382
+                },
+                {
+                  "field": "product_type",
+                  "value": "crop top",
+                  "label": "Crop Top",
+                  "count": 71
+                },
+                {
+                  "field": "product_type",
+                  "value": "top",
+                  "label": "Top",
+                  "count": 56
+                },
+                {
+                  "field": "product_type",
+                  "value": "jersey",
+                  "label": "Jersey",
+                  "count": 8
+                },
+                {
+                  "field": "product_type",
+                  "value": "short sleeve",
+                  "label": "Short Sleeve",
+                  "count": 3
+                },
+                {
+                  "field": "product_type",
+                  "value": "crew neck",
+                  "label": "Crew Neck",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "tank",
+                  "label": "Tank",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "sleeveless tops",
+              "label": "Sleeveless Tops",
+              "count": 364,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "tank",
+                  "label": "Tank",
+                  "count": 323
+                },
+                {
+                  "field": "product_type",
+                  "value": "top",
+                  "label": "Top",
+                  "count": 12
+                },
+                {
+                  "field": "product_type",
+                  "value": "crop top",
+                  "label": "Crop Top",
+                  "count": 9
+                },
+                {
+                  "field": "product_type",
+                  "value": "sleeveless",
+                  "label": "Sleeveless",
+                  "count": 9
+                },
+                {
+                  "field": "product_type",
+                  "value": "crop",
+                  "label": "Crop",
+                  "count": 7
+                },
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "t shirt",
+                  "label": "T Shirt",
+                  "count": 2
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "long sleeve tops",
+              "label": "Long Sleeve Tops",
+              "count": 323,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "top",
+                  "label": "Top",
+                  "count": 165
+                },
+                {
+                  "field": "product_type",
+                  "value": "crop top",
+                  "label": "Crop Top",
+                  "count": 115
+                },
+                {
+                  "field": "product_type",
+                  "value": "t shirt",
+                  "label": "T Shirt",
+                  "count": 24
+                },
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 7
+                },
+                {
+                  "field": "product_type",
+                  "value": "shrug",
+                  "label": "Shrug",
+                  "count": 6
+                },
+                {
+                  "field": "product_type",
+                  "value": "turtleneck",
+                  "label": "Turtleneck",
+                  "count": 3
+                },
+                {
+                  "field": "product_type",
+                  "value": "crew neck",
+                  "label": "Crew Neck",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "long sleeve",
+                  "label": "Long Sleeve",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "hoodies and sweatshirts",
+              "label": "Hoodies and Sweatshirts",
+              "count": 322,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "hoodie",
+                  "label": "Hoodie",
+                  "count": 149
+                },
+                {
+                  "field": "product_type",
+                  "value": "sweatshirt",
+                  "label": "Sweatshirt",
+                  "count": 70
+                },
+                {
+                  "field": "product_type",
+                  "value": "pullover",
+                  "label": "Pullover",
+                  "count": 41
+                },
+                {
+                  "field": "product_type",
+                  "value": "crew",
+                  "label": "Crew",
+                  "count": 26
+                },
+                {
+                  "field": "product_type",
+                  "value": "1 4 zip",
+                  "label": "1 4 Zip",
+                  "count": 16
+                },
+                {
+                  "field": "product_type",
+                  "value": "top",
+                  "label": "Top",
+                  "count": 9
+                },
+                {
+                  "field": "product_type",
+                  "value": "1/4 zip",
+                  "label": "1/4 Zip",
+                  "count": 6
+                },
+                {
+                  "field": "product_type",
+                  "value": "turtleneck",
+                  "label": "Turtleneck",
+                  "count": 3
+                },
+                {
+                  "field": "product_type",
+                  "value": "full zip hoodie",
+                  "label": "Full Zip Hoodie",
+                  "count": 2
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "pants",
+              "label": "Pants",
+              "count": 283,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "joggers",
+                  "label": "Joggers",
+                  "count": 205
+                },
+                {
+                  "field": "product_type",
+                  "value": "wide leg",
+                  "label": "Wide Leg",
+                  "count": 38
+                },
+                {
+                  "field": "product_type",
+                  "value": "straight leg",
+                  "label": "Straight Leg",
+                  "count": 24
+                },
+                {
+                  "field": "product_type",
+                  "value": "track",
+                  "label": "Track",
+                  "count": 6
+                },
+                {
+                  "field": "product_type",
+                  "value": "sweatpants",
+                  "label": "Sweatpants",
+                  "count": 3
+                },
+                {
+                  "field": "product_type",
+                  "value": "training",
+                  "label": "Training",
+                  "count": 3
+                },
+                {
+                  "field": "product_type",
+                  "value": "cargo",
+                  "label": "Cargo",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "leggings",
+                  "label": "Leggings",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "pants",
+                  "label": "Pants",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "outerwear",
+              "label": "Outerwear",
+              "count": 129,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "track top",
+                  "label": "Track Top",
+                  "count": 43
+                },
+                {
+                  "field": "product_type",
+                  "value": "jacket",
+                  "label": "Jacket",
+                  "count": 20
+                },
+                {
+                  "field": "product_type",
+                  "value": "pullover",
+                  "label": "Pullover",
+                  "count": 18
+                },
+                {
+                  "field": "product_type",
+                  "value": "hoodie",
+                  "label": "Hoodie",
+                  "count": 11
+                },
+                {
+                  "field": "product_type",
+                  "value": "top",
+                  "label": "Top",
+                  "count": 8
+                },
+                {
+                  "field": "product_type",
+                  "value": "windbreaker",
+                  "label": "Windbreaker",
+                  "count": 8
+                },
+                {
+                  "field": "product_type",
+                  "value": "sherpa",
+                  "label": "Sherpa",
+                  "count": 7
+                },
+                {
+                  "field": "product_type",
+                  "value": "puffer",
+                  "label": "Puffer",
+                  "count": 6
+                },
+                {
+                  "field": "product_type",
+                  "value": "tank",
+                  "label": "Tank",
+                  "count": 3
+                },
+                {
+                  "field": "product_type",
+                  "value": "bomber",
+                  "label": "Bomber",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "t shirt",
+                  "label": "T Shirt",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "vest gilet",
+                  "label": "Vest Gilet",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "crop tops",
+              "label": "Crop Tops",
+              "count": 117,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "crop top",
+                  "label": "Crop Top",
+                  "count": 56
+                },
+                {
+                  "field": "product_type",
+                  "value": "tank",
+                  "label": "Tank",
+                  "count": 36
+                },
+                {
+                  "field": "product_type",
+                  "value": "t shirt",
+                  "label": "T Shirt",
+                  "count": 13
+                },
+                {
+                  "field": "product_type",
+                  "value": "top",
+                  "label": "Top",
+                  "count": 12
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "underwear",
+              "label": "Underwear",
+              "count": 73,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "thong",
+                  "label": "Thong",
+                  "count": 29
+                },
+                {
+                  "field": "product_type",
+                  "value": "bralette",
+                  "label": "Bralette",
+                  "count": 24
+                },
+                {
+                  "field": "product_type",
+                  "value": "panty",
+                  "label": "Panty",
+                  "count": 19
+                },
+                {
+                  "field": "product_type",
+                  "value": "shorts",
+                  "label": "Shorts",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "one pieces",
+              "label": "One Pieces",
+              "count": 48,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "one piece",
+                  "label": "One Piece",
+                  "count": 18
+                },
+                {
+                  "field": "product_type",
+                  "value": "bodysuit",
+                  "label": "Bodysuit",
+                  "count": 10
+                },
+                {
+                  "field": "product_type",
+                  "value": "all in one",
+                  "label": "All In One",
+                  "count": 9
+                },
+                {
+                  "field": "product_type",
+                  "value": "dress",
+                  "label": "Dress",
+                  "count": 9
+                },
+                {
+                  "field": "product_type",
+                  "value": "cap",
+                  "label": "Cap",
+                  "count": 2
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "hoodies",
+              "label": "Hoodies",
+              "count": 43,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "hoodie",
+                  "label": "Hoodie",
+                  "count": 42
+                },
+                {
+                  "field": "product_type",
+                  "value": "crew",
+                  "label": "Crew",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "sports bra",
+              "label": "Sports Bra",
+              "count": 33,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 33
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "crop top",
+              "label": "Crop Top",
+              "count": 25,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "crop top",
+                  "label": "Crop Top",
+                  "count": 25
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "tank",
+              "label": "Tank",
+              "count": 24,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "tank",
+                  "label": "Tank",
+                  "count": 24
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "product",
+              "label": "Product",
+              "count": 23,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "product",
+                  "label": "Product",
+                  "count": 23
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "t shirt",
+              "label": "T Shirt",
+              "count": 23,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "t shirt",
+                  "label": "T Shirt",
+                  "count": 23
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "hoodie",
+              "label": "Hoodie",
+              "count": 14,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "hoodie",
+                  "label": "Hoodie",
+                  "count": 14
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "bralette",
+              "label": "Bralette",
+              "count": 11,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "bralette",
+                  "label": "Bralette",
+                  "count": 11
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "other",
+              "label": "Other",
+              "count": 11,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "skort",
+                  "label": "Skort",
+                  "count": 4
+                },
+                {
+                  "field": "product_type",
+                  "value": "shrug",
+                  "label": "Shrug",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "one piece",
+                  "label": "One Piece",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "sweatshirt",
+                  "label": "Sweatshirt",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "tank",
+                  "label": "Tank",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "swimwear",
+              "label": "Swimwear",
+              "count": 9,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "top",
+                  "label": "Top",
+                  "count": 5
+                },
+                {
+                  "field": "product_type",
+                  "value": "bikini bottom",
+                  "label": "Bikini Bottom",
+                  "count": 3
+                },
+                {
+                  "field": "product_type",
+                  "value": "thong",
+                  "label": "Thong",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "pullover",
+              "label": "Pullover",
+              "count": 8,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "pullover",
+                  "label": "Pullover",
+                  "count": 8
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "top",
+              "label": "Top",
+              "count": 8,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "top",
+                  "label": "Top",
+                  "count": 8
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "joggers",
+              "label": "Joggers",
+              "count": 7,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "joggers",
+                  "label": "Joggers",
+                  "count": 7
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "equipment",
+              "label": "Equipment",
+              "count": 4,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "gloves",
+                  "label": "Gloves",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "barbel pad",
+                  "label": "Barbel Pad",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "wrist straps",
+                  "label": "Wrist Straps",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "bodysuit",
+              "label": "Bodysuit",
+              "count": 2,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "bodysuit",
+                  "label": "Bodysuit",
+                  "count": 2
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "misc",
+              "label": "Misc",
+              "count": 1,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "towel",
+                  "label": "Towel",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "windbreaker",
+              "label": "Windbreaker",
+              "count": 1,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "windbreaker",
+                  "label": "Windbreaker",
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "field": "department",
+          "value": "accessories",
+          "label": "Accessories",
+          "count": 549,
+          "children": [
+            {
+              "field": "category",
+              "value": "socks",
+              "label": "Socks",
+              "count": 156,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "socks",
+                  "label": "Socks",
+                  "count": 122
+                },
+                {
+                  "field": "product_type",
+                  "value": "crew",
+                  "label": "Crew",
+                  "count": 24
+                },
+                {
+                  "field": "product_type",
+                  "value": "quarter",
+                  "label": "Quarter",
+                  "count": 4
+                },
+                {
+                  "field": "product_type",
+                  "value": "midi",
+                  "label": "Midi",
+                  "count": 3
+                },
+                {
+                  "field": "product_type",
+                  "value": "long",
+                  "label": "Long",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "bags",
+              "label": "Bags",
+              "count": 124,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "bag",
+                  "label": "Bag",
+                  "count": 31
+                },
+                {
+                  "field": "product_type",
+                  "value": "backpack",
+                  "label": "Backpack",
+                  "count": 23
+                },
+                {
+                  "field": "product_type",
+                  "value": "tote",
+                  "label": "Tote",
+                  "count": 22
+                },
+                {
+                  "field": "product_type",
+                  "value": "small holdall",
+                  "label": "Small Holdall",
+                  "count": 20
+                },
+                {
+                  "field": "product_type",
+                  "value": "crossbody",
+                  "label": "Crossbody",
+                  "count": 16
+                },
+                {
+                  "field": "product_type",
+                  "value": "large holdall",
+                  "label": "Large Holdall",
+                  "count": 10
+                },
+                {
+                  "field": "product_type",
+                  "value": "bags",
+                  "label": "Bags",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "top",
+                  "label": "Top",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "headwear",
+              "label": "Headwear",
+              "count": 118,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "cap",
+                  "label": "Cap",
+                  "count": 53
+                },
+                {
+                  "field": "product_type",
+                  "value": "headband",
+                  "label": "Headband",
+                  "count": 22
+                },
+                {
+                  "field": "product_type",
+                  "value": "beanie",
+                  "label": "Beanie",
+                  "count": 20
+                },
+                {
+                  "field": "product_type",
+                  "value": "scrunchie",
+                  "label": "Scrunchie",
+                  "count": 15
+                },
+                {
+                  "field": "product_type",
+                  "value": "hijab",
+                  "label": "Hijab",
+                  "count": 5
+                },
+                {
+                  "field": "product_type",
+                  "value": "bucket",
+                  "label": "Bucket",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "bottles",
+              "label": "Bottles",
+              "count": 55,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "bottle",
+                  "label": "Bottle",
+                  "count": 45
+                },
+                {
+                  "field": "product_type",
+                  "value": "insulated",
+                  "label": "Insulated",
+                  "count": 7
+                },
+                {
+                  "field": "product_type",
+                  "value": "shaker",
+                  "label": "Shaker",
+                  "count": 3
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "equipment",
+              "label": "Equipment",
+              "count": 52,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "lifting straps",
+                  "label": "Lifting Straps",
+                  "count": 27
+                },
+                {
+                  "field": "product_type",
+                  "value": "belt",
+                  "label": "Belt",
+                  "count": 7
+                },
+                {
+                  "field": "product_type",
+                  "value": "studio / recovery",
+                  "label": "Studio / Recovery",
+                  "count": 5
+                },
+                {
+                  "field": "product_type",
+                  "value": "lifting",
+                  "label": "Lifting",
+                  "count": 4
+                },
+                {
+                  "field": "product_type",
+                  "value": "gloves",
+                  "label": "Gloves",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "resistance",
+                  "label": "Resistance",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "bottle",
+                  "label": "Bottle",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "cardio",
+                  "label": "Cardio",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "wrist straps",
+                  "label": "Wrist Straps",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "misc",
+              "label": "Misc",
+              "count": 37,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "keychain",
+                  "label": "Keychain",
+                  "count": 17
+                },
+                {
+                  "field": "product_type",
+                  "value": "stationery",
+                  "label": "Stationery",
+                  "count": 7
+                },
+                {
+                  "field": "product_type",
+                  "value": "misc",
+                  "label": "Misc",
+                  "count": 4
+                },
+                {
+                  "field": "product_type",
+                  "value": "patch",
+                  "label": "Patch",
+                  "count": 3
+                },
+                {
+                  "field": "product_type",
+                  "value": "bag",
+                  "label": "Bag",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "belt",
+                  "label": "Belt",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "beanie",
+                  "label": "Beanie",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "towel",
+                  "label": "Towel",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "other",
+              "label": "Other",
+              "count": 4,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "misc",
+                  "label": "Misc",
+                  "count": 4
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "bag",
+              "label": "Bag",
+              "count": 2,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "bag",
+                  "label": "Bag",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "holdall",
+                  "label": "Holdall",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "scrunchie",
+              "label": "Scrunchie",
+              "count": 1,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "scrunchie",
+                  "label": "Scrunchie",
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "field": "department",
+          "value": "underwear",
+          "label": "Underwear",
+          "count": 34,
+          "children": [
+            {
+              "field": "category",
+              "value": "underwear",
+              "label": "Underwear",
+              "count": 28,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "thong",
+                  "label": "Thong",
+                  "count": 13
+                },
+                {
+                  "field": "product_type",
+                  "value": "bralette",
+                  "label": "Bralette",
+                  "count": 10
+                },
+                {
+                  "field": "product_type",
+                  "value": "boxer",
+                  "label": "Boxer",
+                  "count": 4
+                },
+                {
+                  "field": "product_type",
+                  "value": "panty",
+                  "label": "Panty",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "thong",
+              "label": "Thong",
+              "count": 6,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "thong",
+                  "label": "Thong",
+                  "count": 6
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "field": "gender",
+      "value": "men",
+      "label": "Men",
+      "count": 3480,
+      "children": [
+        {
+          "field": "department",
+          "value": "apparel",
+          "label": "Apparel",
+          "count": 3469,
+          "children": [
+            {
+              "field": "category",
+              "value": "short sleeve tops",
+              "label": "Short Sleeve Tops",
+              "count": 987,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "t shirt",
+                  "label": "T Shirt",
+                  "count": 942
+                },
+                {
+                  "field": "product_type",
+                  "value": "jersey",
+                  "label": "Jersey",
+                  "count": 20
+                },
+                {
+                  "field": "product_type",
+                  "value": "polo",
+                  "label": "Polo",
+                  "count": 9
+                },
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 8
+                },
+                {
+                  "field": "product_type",
+                  "value": "top",
+                  "label": "Top",
+                  "count": 7
+                },
+                {
+                  "field": "product_type",
+                  "value": "crew",
+                  "label": "Crew",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "shorts",
+              "label": "Shorts",
+              "count": 619,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "shorts",
+                  "label": "Shorts",
+                  "count": 562
+                },
+                {
+                  "field": "product_type",
+                  "value": "training",
+                  "label": "Training",
+                  "count": 38
+                },
+                {
+                  "field": "product_type",
+                  "value": "lifestyle",
+                  "label": "Lifestyle",
+                  "count": 8
+                },
+                {
+                  "field": "product_type",
+                  "value": "baselayer",
+                  "label": "Baselayer",
+                  "count": 5
+                },
+                {
+                  "field": "product_type",
+                  "value": "2 in 1",
+                  "label": "2 In 1",
+                  "count": 3
+                },
+                {
+                  "field": "product_type",
+                  "value": "boxer",
+                  "label": "Boxer",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "tight",
+                  "label": "Tight",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "sleeveless tops",
+              "label": "Sleeveless Tops",
+              "count": 536,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "tank",
+                  "label": "Tank",
+                  "count": 403
+                },
+                {
+                  "field": "product_type",
+                  "value": "stringer",
+                  "label": "Stringer",
+                  "count": 116
+                },
+                {
+                  "field": "product_type",
+                  "value": "t shirt",
+                  "label": "T Shirt",
+                  "count": 10
+                },
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 5
+                },
+                {
+                  "field": "product_type",
+                  "value": "polo",
+                  "label": "Polo",
+                  "count": 2
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "hoodies and sweatshirts",
+              "label": "Hoodies and Sweatshirts",
+              "count": 489,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "hoodie",
+                  "label": "Hoodie",
+                  "count": 318
+                },
+                {
+                  "field": "product_type",
+                  "value": "crew",
+                  "label": "Crew",
+                  "count": 72
+                },
+                {
+                  "field": "product_type",
+                  "value": "1 4 zip",
+                  "label": "1 4 Zip",
+                  "count": 52
+                },
+                {
+                  "field": "product_type",
+                  "value": "sweatshirt",
+                  "label": "Sweatshirt",
+                  "count": 15
+                },
+                {
+                  "field": "product_type",
+                  "value": "pullover",
+                  "label": "Pullover",
+                  "count": 8
+                },
+                {
+                  "field": "product_type",
+                  "value": "1/4 zip",
+                  "label": "1/4 Zip",
+                  "count": 7
+                },
+                {
+                  "field": "product_type",
+                  "value": "full zip hoodie",
+                  "label": "Full Zip Hoodie",
+                  "count": 6
+                },
+                {
+                  "field": "product_type",
+                  "value": "top",
+                  "label": "Top",
+                  "count": 5
+                },
+                {
+                  "field": "product_type",
+                  "value": "tank",
+                  "label": "Tank",
+                  "count": 3
+                },
+                {
+                  "field": "product_type",
+                  "value": "sweater",
+                  "label": "Sweater",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "pants",
+              "label": "Pants",
+              "count": 346,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "joggers",
+                  "label": "Joggers",
+                  "count": 224
+                },
+                {
+                  "field": "product_type",
+                  "value": "training",
+                  "label": "Training",
+                  "count": 42
+                },
+                {
+                  "field": "product_type",
+                  "value": "lifestyle",
+                  "label": "Lifestyle",
+                  "count": 26
+                },
+                {
+                  "field": "product_type",
+                  "value": "straight leg",
+                  "label": "Straight Leg",
+                  "count": 21
+                },
+                {
+                  "field": "product_type",
+                  "value": "leggings",
+                  "label": "Leggings",
+                  "count": 11
+                },
+                {
+                  "field": "product_type",
+                  "value": "baselayer",
+                  "label": "Baselayer",
+                  "count": 7
+                },
+                {
+                  "field": "product_type",
+                  "value": "cargo",
+                  "label": "Cargo",
+                  "count": 4
+                },
+                {
+                  "field": "product_type",
+                  "value": "wide leg",
+                  "label": "Wide Leg",
+                  "count": 3
+                },
+                {
+                  "field": "product_type",
+                  "value": "sweatpants",
+                  "label": "Sweatpants",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "top",
+                  "label": "Top",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "track",
+                  "label": "Track",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "pants",
+                  "label": "Pants",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "long sleeve tops",
+              "label": "Long Sleeve Tops",
+              "count": 259,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "t shirt",
+                  "label": "T Shirt",
+                  "count": 233
+                },
+                {
+                  "field": "product_type",
+                  "value": "henley",
+                  "label": "Henley",
+                  "count": 11
+                },
+                {
+                  "field": "product_type",
+                  "value": "polo",
+                  "label": "Polo",
+                  "count": 5
+                },
+                {
+                  "field": "product_type",
+                  "value": "jersey",
+                  "label": "Jersey",
+                  "count": 4
+                },
+                {
+                  "field": "product_type",
+                  "value": "top",
+                  "label": "Top",
+                  "count": 4
+                },
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 2
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "outerwear",
+              "label": "Outerwear",
+              "count": 65,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "track top",
+                  "label": "Track Top",
+                  "count": 24
+                },
+                {
+                  "field": "product_type",
+                  "value": "windbreaker",
+                  "label": "Windbreaker",
+                  "count": 16
+                },
+                {
+                  "field": "product_type",
+                  "value": "jacket",
+                  "label": "Jacket",
+                  "count": 8
+                },
+                {
+                  "field": "product_type",
+                  "value": "tank",
+                  "label": "Tank",
+                  "count": 4
+                },
+                {
+                  "field": "product_type",
+                  "value": "midlayer",
+                  "label": "Midlayer",
+                  "count": 3
+                },
+                {
+                  "field": "product_type",
+                  "value": "top",
+                  "label": "Top",
+                  "count": 3
+                },
+                {
+                  "field": "product_type",
+                  "value": "bomber",
+                  "label": "Bomber",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "hoodie",
+                  "label": "Hoodie",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "puffer",
+                  "label": "Puffer",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "jersey",
+                  "label": "Jersey",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "t shirt",
+              "label": "T Shirt",
+              "count": 64,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "t shirt",
+                  "label": "T Shirt",
+                  "count": 64
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "underwear",
+              "label": "Underwear",
+              "count": 37,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "boxer",
+                  "label": "Boxer",
+                  "count": 31
+                },
+                {
+                  "field": "product_type",
+                  "value": "panty",
+                  "label": "Panty",
+                  "count": 5
+                },
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "tank",
+              "label": "Tank",
+              "count": 18,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "tank",
+                  "label": "Tank",
+                  "count": 18
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "hoodie",
+              "label": "Hoodie",
+              "count": 16,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "hoodie",
+                  "label": "Hoodie",
+                  "count": 16
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "joggers",
+              "label": "Joggers",
+              "count": 12,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "joggers",
+                  "label": "Joggers",
+                  "count": 12
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "stringer",
+              "label": "Stringer",
+              "count": 12,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "stringer",
+                  "label": "Stringer",
+                  "count": 12
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "product",
+              "label": "Product",
+              "count": 4,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "product",
+                  "label": "Product",
+                  "count": 4
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "sweatshirt",
+              "label": "Sweatshirt",
+              "count": 4,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "sweatshirt",
+                  "label": "Sweatshirt",
+                  "count": 4
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "pullover",
+              "label": "Pullover",
+              "count": 1,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "pullover",
+                  "label": "Pullover",
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "field": "department",
+          "value": "underwear",
+          "label": "Underwear",
+          "count": 7,
+          "children": [
+            {
+              "field": "category",
+              "value": "underwear",
+              "label": "Underwear",
+              "count": 7,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "boxer",
+                  "label": "Boxer",
+                  "count": 7
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "field": "department",
+          "value": "accessories",
+          "label": "Accessories",
+          "count": 4,
+          "children": [
+            {
+              "field": "category",
+              "value": "headwear",
+              "label": "Headwear",
+              "count": 2,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "beanie",
+                  "label": "Beanie",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "headband",
+                  "label": "Headband",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "equipment",
+              "label": "Equipment",
+              "count": 1,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "belt",
+                  "label": "Belt",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "underwear",
+              "label": "Underwear",
+              "count": 1,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "boxer",
+                  "label": "Boxer",
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "field": "gender",
+      "value": "unisex",
+      "label": "Unisex",
+      "count": 474,
+      "children": [
+        {
+          "field": "department",
+          "value": "accessories",
+          "label": "Accessories",
+          "count": 405,
+          "children": [
+            {
+              "field": "category",
+              "value": "bag",
+              "label": "Bag",
+              "count": 91,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "bag",
+                  "label": "Bag",
+                  "count": 46
+                },
+                {
+                  "field": "product_type",
+                  "value": "backpack",
+                  "label": "Backpack",
+                  "count": 24
+                },
+                {
+                  "field": "product_type",
+                  "value": "tote",
+                  "label": "Tote",
+                  "count": 8
+                },
+                {
+                  "field": "product_type",
+                  "value": "washbag",
+                  "label": "Washbag",
+                  "count": 5
+                },
+                {
+                  "field": "product_type",
+                  "value": "crossbody",
+                  "label": "Crossbody",
+                  "count": 4
+                },
+                {
+                  "field": "product_type",
+                  "value": "drawstring",
+                  "label": "Drawstring",
+                  "count": 3
+                },
+                {
+                  "field": "product_type",
+                  "value": "holdall",
+                  "label": "Holdall",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "socks",
+              "label": "Socks",
+              "count": 86,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "socks",
+                  "label": "Socks",
+                  "count": 73
+                },
+                {
+                  "field": "product_type",
+                  "value": "crew",
+                  "label": "Crew",
+                  "count": 10
+                },
+                {
+                  "field": "product_type",
+                  "value": "long",
+                  "label": "Long",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "bags",
+              "label": "Bags",
+              "count": 72,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "bag",
+                  "label": "Bag",
+                  "count": 22
+                },
+                {
+                  "field": "product_type",
+                  "value": "backpack",
+                  "label": "Backpack",
+                  "count": 20
+                },
+                {
+                  "field": "product_type",
+                  "value": "small holdall",
+                  "label": "Small Holdall",
+                  "count": 8
+                },
+                {
+                  "field": "product_type",
+                  "value": "tote",
+                  "label": "Tote",
+                  "count": 7
+                },
+                {
+                  "field": "product_type",
+                  "value": "crossbody",
+                  "label": "Crossbody",
+                  "count": 6
+                },
+                {
+                  "field": "product_type",
+                  "value": "large holdall",
+                  "label": "Large Holdall",
+                  "count": 5
+                },
+                {
+                  "field": "product_type",
+                  "value": "bags",
+                  "label": "Bags",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "sports bra",
+                  "label": "Sports Bra",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "top",
+                  "label": "Top",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "washbag",
+                  "label": "Washbag",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "headwear",
+              "label": "Headwear",
+              "count": 62,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "cap",
+                  "label": "Cap",
+                  "count": 38
+                },
+                {
+                  "field": "product_type",
+                  "value": "beanie",
+                  "label": "Beanie",
+                  "count": 12
+                },
+                {
+                  "field": "product_type",
+                  "value": "headband",
+                  "label": "Headband",
+                  "count": 7
+                },
+                {
+                  "field": "product_type",
+                  "value": "bucket",
+                  "label": "Bucket",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "scrunchie",
+                  "label": "Scrunchie",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "hairband",
+                  "label": "Hairband",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "equipment",
+              "label": "Equipment",
+              "count": 38,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "resistance",
+                  "label": "Resistance",
+                  "count": 8
+                },
+                {
+                  "field": "product_type",
+                  "value": "belt",
+                  "label": "Belt",
+                  "count": 7
+                },
+                {
+                  "field": "product_type",
+                  "value": "lifting",
+                  "label": "Lifting",
+                  "count": 7
+                },
+                {
+                  "field": "product_type",
+                  "value": "cardio",
+                  "label": "Cardio",
+                  "count": 6
+                },
+                {
+                  "field": "product_type",
+                  "value": "lifting straps",
+                  "label": "Lifting Straps",
+                  "count": 6
+                },
+                {
+                  "field": "product_type",
+                  "value": "studio / recovery",
+                  "label": "Studio / Recovery",
+                  "count": 2
+                },
+                {
+                  "field": "product_type",
+                  "value": "gloves",
+                  "label": "Gloves",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "sleeves",
+                  "label": "Sleeves",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "bottles",
+              "label": "Bottles",
+              "count": 37,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "bottle",
+                  "label": "Bottle",
+                  "count": 35
+                },
+                {
+                  "field": "product_type",
+                  "value": "insulated",
+                  "label": "Insulated",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "shaker",
+                  "label": "Shaker",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "beanie",
+              "label": "Beanie",
+              "count": 6,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "beanie",
+                  "label": "Beanie",
+                  "count": 6
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "misc",
+              "label": "Misc",
+              "count": 5,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "keychain",
+                  "label": "Keychain",
+                  "count": 3
+                },
+                {
+                  "field": "product_type",
+                  "value": "sweatband",
+                  "label": "Sweatband",
+                  "count": 1
+                },
+                {
+                  "field": "product_type",
+                  "value": "towel",
+                  "label": "Towel",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "bottle",
+              "label": "Bottle",
+              "count": 4,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "bottle",
+                  "label": "Bottle",
+                  "count": 4
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "cap",
+              "label": "Cap",
+              "count": 4,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "cap",
+                  "label": "Cap",
+                  "count": 4
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "field": "department",
+          "value": "apparel",
+          "label": "Apparel",
+          "count": 67,
+          "children": [
+            {
+              "field": "category",
+              "value": "product",
+              "label": "Product",
+              "count": 59,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "product",
+                  "label": "Product",
+                  "count": 59
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "t shirt",
+              "label": "T Shirt",
+              "count": 2,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "t shirt",
+                  "label": "T Shirt",
+                  "count": 2
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "equipment",
+              "label": "Equipment",
+              "count": 1,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "other",
+                  "label": "Other",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "hoodies and sweatshirts",
+              "label": "Hoodies and Sweatshirts",
+              "count": 1,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "hoodie",
+                  "label": "Hoodie",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "misc",
+              "label": "Misc",
+              "count": 1,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "towel",
+                  "label": "Towel",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "other",
+              "label": "Other",
+              "count": 1,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "one piece",
+                  "label": "One Piece",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "slider",
+              "label": "Slider",
+              "count": 1,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "everyday",
+                  "label": "Everyday",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "field": "category",
+              "value": "sweatshirt",
+              "label": "Sweatshirt",
+              "count": 1,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "sweatshirt",
+                  "label": "Sweatshirt",
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "field": "department",
+          "value": "footwear",
+          "label": "Footwear",
+          "count": 2,
+          "children": [
+            {
+              "field": "category",
+              "value": "slider",
+              "label": "Slider",
+              "count": 2,
+              "children": [
+                {
+                  "field": "product_type",
+                  "value": "everyday",
+                  "label": "Everyday",
+                  "count": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "facet_fields": [
+    "gender",
+    "department",
+    "category",
+    "product_type",
+    "activity",
+    "collection",
+    "color",
+    "fit",
+    "support",
+    "features",
+    "season",
+    "availability"
+  ],
+  "facets": {
+    "gender": [
+      {
+        "value": "women",
+        "label": "Women",
+        "count": 4776
+      },
+      {
+        "value": "men",
+        "label": "Men",
+        "count": 3480
+      },
+      {
+        "value": "unisex",
+        "label": "Unisex",
+        "count": 474
+      }
+    ],
+    "department": [
+      {
+        "value": "apparel",
+        "label": "Apparel",
+        "count": 7729
+      },
+      {
+        "value": "accessories",
+        "label": "Accessories",
+        "count": 958
+      },
+      {
+        "value": "underwear",
+        "label": "Underwear",
+        "count": 41
+      },
+      {
+        "value": "footwear",
+        "label": "Footwear",
+        "count": 2
+      }
+    ],
+    "category": [
+      {
+        "value": "short sleeve tops",
+        "label": "Short Sleeve Tops",
+        "count": 1511
+      },
+      {
+        "value": "shorts",
+        "label": "Shorts",
+        "count": 1177
+      },
+      {
+        "value": "sleeveless tops",
+        "label": "Sleeveless Tops",
+        "count": 900
+      },
+      {
+        "value": "hoodies and sweatshirts",
+        "label": "Hoodies and Sweatshirts",
+        "count": 812
+      },
+      {
+        "value": "sports bras",
+        "label": "Sports Bras",
+        "count": 650
+      },
+      {
+        "value": "pants",
+        "label": "Pants",
+        "count": 629
+      },
+      {
+        "value": "long sleeve tops",
+        "label": "Long Sleeve Tops",
+        "count": 582
+      },
+      {
+        "value": "leggings",
+        "label": "Leggings",
+        "count": 555
+      },
+      {
+        "value": "socks",
+        "label": "Socks",
+        "count": 242
+      },
+      {
+        "value": "bags",
+        "label": "Bags",
+        "count": 196
+      },
+      {
+        "value": "outerwear",
+        "label": "Outerwear",
+        "count": 194
+      },
+      {
+        "value": "headwear",
+        "label": "Headwear",
+        "count": 182
+      },
+      {
+        "value": "underwear",
+        "label": "Underwear",
+        "count": 146
+      },
+      {
+        "value": "crop tops",
+        "label": "Crop Tops",
+        "count": 117
+      },
+      {
+        "value": "equipment",
+        "label": "Equipment",
+        "count": 96
+      },
+      {
+        "value": "bag",
+        "label": "Bag",
+        "count": 93
+      },
+      {
+        "value": "bottles",
+        "label": "Bottles",
+        "count": 92
+      },
+      {
+        "value": "t shirt",
+        "label": "T Shirt",
+        "count": 89
+      },
+      {
+        "value": "product",
+        "label": "Product",
+        "count": 86
+      },
+      {
+        "value": "one pieces",
+        "label": "One Pieces",
+        "count": 48
+      },
+      {
+        "value": "misc",
+        "label": "Misc",
+        "count": 44
+      },
+      {
+        "value": "hoodies",
+        "label": "Hoodies",
+        "count": 43
+      },
+      {
+        "value": "tank",
+        "label": "Tank",
+        "count": 42
+      },
+      {
+        "value": "sports bra",
+        "label": "Sports Bra",
+        "count": 33
+      },
+      {
+        "value": "hoodie",
+        "label": "Hoodie",
+        "count": 30
+      },
+      {
+        "value": "crop top",
+        "label": "Crop Top",
+        "count": 25
+      },
+      {
+        "value": "joggers",
+        "label": "Joggers",
+        "count": 19
+      },
+      {
+        "value": "other",
+        "label": "Other",
+        "count": 16
+      },
+      {
+        "value": "stringer",
+        "label": "Stringer",
+        "count": 12
+      },
+      {
+        "value": "bralette",
+        "label": "Bralette",
+        "count": 11
+      },
+      {
+        "value": "pullover",
+        "label": "Pullover",
+        "count": 9
+      },
+      {
+        "value": "swimwear",
+        "label": "Swimwear",
+        "count": 9
+      },
+      {
+        "value": "top",
+        "label": "Top",
+        "count": 8
+      },
+      {
+        "value": "beanie",
+        "label": "Beanie",
+        "count": 6
+      },
+      {
+        "value": "thong",
+        "label": "Thong",
+        "count": 6
+      },
+      {
+        "value": "sweatshirt",
+        "label": "Sweatshirt",
+        "count": 5
+      },
+      {
+        "value": "bottle",
+        "label": "Bottle",
+        "count": 4
+      },
+      {
+        "value": "cap",
+        "label": "Cap",
+        "count": 4
+      },
+      {
+        "value": "slider",
+        "label": "Slider",
+        "count": 3
+      },
+      {
+        "value": "bodysuit",
+        "label": "Bodysuit",
+        "count": 2
+      },
+      {
+        "value": "scrunchie",
+        "label": "Scrunchie",
+        "count": 1
+      },
+      {
+        "value": "windbreaker",
+        "label": "Windbreaker",
+        "count": 1
+      }
+    ],
+    "product_type": [
+      {
+        "value": "t shirt",
+        "label": "T Shirt",
+        "count": 1697
+      },
+      {
+        "value": "shorts",
+        "label": "Shorts",
+        "count": 1104
+      },
+      {
+        "value": "tank",
+        "label": "Tank",
+        "count": 816
+      },
+      {
+        "value": "sports bra",
+        "label": "Sports Bra",
+        "count": 684
+      },
+      {
+        "value": "hoodie",
+        "label": "Hoodie",
+        "count": 553
+      },
+      {
+        "value": "leggings",
+        "label": "Leggings",
+        "count": 514
+      },
+      {
+        "value": "joggers",
+        "label": "Joggers",
+        "count": 451
+      },
+      {
+        "value": "top",
+        "label": "Top",
+        "count": 298
+      },
+      {
+        "value": "crop top",
+        "label": "Crop Top",
+        "count": 276
+      },
+      {
+        "value": "socks",
+        "label": "Socks",
+        "count": 195
+      },
+      {
+        "value": "crew",
+        "label": "Crew",
+        "count": 134
+      },
+      {
+        "value": "stringer",
+        "label": "Stringer",
+        "count": 128
+      },
+      {
+        "value": "bag",
+        "label": "Bag",
+        "count": 102
+      },
+      {
+        "value": "cap",
+        "label": "Cap",
+        "count": 97
+      },
+      {
+        "value": "sweatshirt",
+        "label": "Sweatshirt",
+        "count": 91
+      },
+      {
+        "value": "product",
+        "label": "Product",
+        "count": 86
+      },
+      {
+        "value": "bottle",
+        "label": "Bottle",
+        "count": 85
+      },
+      {
+        "value": "bralette",
+        "label": "Bralette",
+        "count": 83
+      },
+      {
+        "value": "training",
+        "label": "Training",
+        "count": 83
+      },
+      {
+        "value": "pullover",
+        "label": "Pullover",
+        "count": 76
+      },
+      {
+        "value": "1 4 zip",
+        "label": "1 4 Zip",
+        "count": 68
+      },
+      {
+        "value": "backpack",
+        "label": "Backpack",
+        "count": 67
+      },
+      {
+        "value": "track top",
+        "label": "Track Top",
+        "count": 67
+      },
+      {
+        "value": "thong",
+        "label": "Thong",
+        "count": 49
+      },
+      {
+        "value": "full length",
+        "label": "Full Length",
+        "count": 46
+      },
+      {
+        "value": "straight leg",
+        "label": "Straight Leg",
+        "count": 45
+      },
+      {
+        "value": "boxer",
+        "label": "Boxer",
+        "count": 44
+      },
+      {
+        "value": "wide leg",
+        "label": "Wide Leg",
+        "count": 41
+      },
+      {
+        "value": "beanie",
+        "label": "Beanie",
+        "count": 40
+      },
+      {
+        "value": "tote",
+        "label": "Tote",
+        "count": 37
+      },
+      {
+        "value": "lifestyle",
+        "label": "Lifestyle",
+        "count": 34
+      },
+      {
+        "value": "jersey",
+        "label": "Jersey",
+        "count": 33
+      },
+      {
+        "value": "lifting straps",
+        "label": "Lifting Straps",
+        "count": 33
+      },
+      {
+        "value": "headband",
+        "label": "Headband",
+        "count": 30
+      },
+      {
+        "value": "jacket",
+        "label": "Jacket",
+        "count": 28
+      },
+      {
+        "value": "small holdall",
+        "label": "Small Holdall",
+        "count": 28
+      },
+      {
+        "value": "crossbody",
+        "label": "Crossbody",
+        "count": 26
+      },
+      {
+        "value": "panty",
+        "label": "Panty",
+        "count": 25
+      },
+      {
+        "value": "windbreaker",
+        "label": "Windbreaker",
+        "count": 25
+      },
+      {
+        "value": "keychain",
+        "label": "Keychain",
+        "count": 20
+      },
+      {
+        "value": "one piece",
+        "label": "One Piece",
+        "count": 20
+      },
+      {
+        "value": "scrunchie",
+        "label": "Scrunchie",
+        "count": 18
+      },
+      {
+        "value": "belt",
+        "label": "Belt",
+        "count": 17
+      },
+      {
+        "value": "polo",
+        "label": "Polo",
+        "count": 16
+      },
+      {
+        "value": "large holdall",
+        "label": "Large Holdall",
+        "count": 15
+      },
+      {
+        "value": "1/4 zip",
+        "label": "1/4 Zip",
+        "count": 13
+      },
+      {
+        "value": "baselayer",
+        "label": "Baselayer",
+        "count": 12
+      },
+      {
+        "value": "bodysuit",
+        "label": "Bodysuit",
+        "count": 12
+      },
+      {
+        "value": "henley",
+        "label": "Henley",
+        "count": 11
+      },
+      {
+        "value": "lifting",
+        "label": "Lifting",
+        "count": 11
+      },
+      {
+        "value": "resistance",
+        "label": "Resistance",
+        "count": 10
+      },
+      {
+        "value": "all in one",
+        "label": "All In One",
+        "count": 9
+      },
+      {
+        "value": "dress",
+        "label": "Dress",
+        "count": 9
+      },
+      {
+        "value": "sleeveless",
+        "label": "Sleeveless",
+        "count": 9
+      },
+      {
+        "value": "full zip hoodie",
+        "label": "Full Zip Hoodie",
+        "count": 8
+      },
+      {
+        "value": "insulated",
+        "label": "Insulated",
+        "count": 8
+      },
+      {
+        "value": "misc",
+        "label": "Misc",
+        "count": 8
+      },
+      {
+        "value": "puffer",
+        "label": "Puffer",
+        "count": 8
+      },
+      {
+        "value": "shrug",
+        "label": "Shrug",
+        "count": 8
+      },
+      {
+        "value": "skort",
+        "label": "Skort",
+        "count": 8
+      },
+      {
+        "value": "square neck",
+        "label": "Square Neck",
+        "count": 8
+      },
+      {
+        "value": "tight",
+        "label": "Tight",
+        "count": 8
+      },
+      {
+        "value": "track",
+        "label": "Track",
+        "count": 8
+      },
+      {
+        "value": "cardio",
+        "label": "Cardio",
+        "count": 7
+      },
+      {
+        "value": "crop",
+        "label": "Crop",
+        "count": 7
+      },
+      {
+        "value": "sherpa",
+        "label": "Sherpa",
+        "count": 7
+      },
+      {
+        "value": "stationery",
+        "label": "Stationery",
+        "count": 7
+      },
+      {
+        "value": "studio / recovery",
+        "label": "Studio / Recovery",
+        "count": 7
+      },
+      {
+        "value": "cargo",
+        "label": "Cargo",
+        "count": 6
+      },
+      {
+        "value": "turtleneck",
+        "label": "Turtleneck",
+        "count": 6
+      },
+      {
+        "value": "washbag",
+        "label": "Washbag",
+        "count": 6
+      },
+      {
+        "value": "gloves",
+        "label": "Gloves",
+        "count": 5
+      },
+      {
+        "value": "hijab",
+        "label": "Hijab",
+        "count": 5
+      },
+      {
+        "value": "sweatpants",
+        "label": "Sweatpants",
+        "count": 5
+      },
+      {
+        "value": "bomber",
+        "label": "Bomber",
+        "count": 4
+      },
+      {
+        "value": "bucket",
+        "label": "Bucket",
+        "count": 4
+      },
+      {
+        "value": "crew neck",
+        "label": "Crew Neck",
+        "count": 4
+      },
+      {
+        "value": "long",
+        "label": "Long",
+        "count": 4
+      },
+      {
+        "value": "quarter",
+        "label": "Quarter",
+        "count": 4
+      },
+      {
+        "value": "shaker",
+        "label": "Shaker",
+        "count": 4
+      },
+      {
+        "value": "towel",
+        "label": "Towel",
+        "count": 4
+      },
+      {
+        "value": "2 in 1",
+        "label": "2 In 1",
+        "count": 3
+      },
+      {
+        "value": "bikini bottom",
+        "label": "Bikini Bottom",
+        "count": 3
+      },
+      {
+        "value": "drawstring",
+        "label": "Drawstring",
+        "count": 3
+      },
+      {
+        "value": "everyday",
+        "label": "Everyday",
+        "count": 3
+      },
+      {
+        "value": "midi",
+        "label": "Midi",
+        "count": 3
+      },
+      {
+        "value": "midlayer",
+        "label": "Midlayer",
+        "count": 3
+      },
+      {
+        "value": "patch",
+        "label": "Patch",
+        "count": 3
+      },
+      {
+        "value": "short sleeve",
+        "label": "Short Sleeve",
+        "count": 3
+      },
+      {
+        "value": "bags",
+        "label": "Bags",
+        "count": 2
+      },
+      {
+        "value": "holdall",
+        "label": "Holdall",
+        "count": 2
+      },
+      {
+        "value": "pants",
+        "label": "Pants",
+        "count": 2
+      },
+      {
+        "value": "sweater",
+        "label": "Sweater",
+        "count": 2
+      },
+      {
+        "value": "wrist straps",
+        "label": "Wrist Straps",
+        "count": 2
+      },
+      {
+        "value": "barbel pad",
+        "label": "Barbel Pad",
+        "count": 1
+      },
+      {
+        "value": "hairband",
+        "label": "Hairband",
+        "count": 1
+      },
+      {
+        "value": "long sleeve",
+        "label": "Long Sleeve",
+        "count": 1
+      },
+      {
+        "value": "other",
+        "label": "Other",
+        "count": 1
+      },
+      {
+        "value": "sleeves",
+        "label": "Sleeves",
+        "count": 1
+      },
+      {
+        "value": "sweatband",
+        "label": "Sweatband",
+        "count": 1
+      },
+      {
+        "value": "vest gilet",
+        "label": "Vest Gilet",
+        "count": 1
+      }
+    ],
+    "activity": [
+      {
+        "value": "conditioning",
+        "label": "Conditioning",
+        "count": 3364
+      },
+      {
+        "value": "lifting",
+        "label": "Lifting",
+        "count": 2560
+      },
+      {
+        "value": "rest day",
+        "label": "Rest Day",
+        "count": 2150
+      },
+      {
+        "value": "running",
+        "label": "Running",
+        "count": 237
+      },
+      {
+        "value": "multi",
+        "label": "Multi",
+        "count": 218
+      },
+      {
+        "value": "hybrid",
+        "label": "Hybrid",
+        "count": 101
+      },
+      {
+        "value": "studio",
+        "label": "Studio",
+        "count": 54
+      },
+      {
+        "value": "swim",
+        "label": "Swim",
+        "count": 14
+      },
+      {
+        "value": "flow",
+        "label": "Flow",
+        "count": 7
+      },
+      {
+        "value": "pilates",
+        "label": "Pilates",
+        "count": 4
+      },
+      {
+        "value": "hiit",
+        "label": "Hiit",
+        "count": 2
+      }
+    ],
+    "collection": [
+      {
+        "value": "training",
+        "label": "Training",
+        "count": 358
+      },
+      {
+        "value": "vital",
+        "label": "Vital",
+        "count": 353
+      },
+      {
+        "value": "fundamental sports bras",
+        "label": "Fundamental Sports Bras",
+        "count": 253
+      },
+      {
+        "value": "power",
+        "label": "Power",
+        "count": 253
+      },
+      {
+        "value": "arrival",
+        "label": "Arrival",
+        "count": 237
+      },
+      {
+        "value": "key items",
+        "label": "Key Items",
+        "count": 233
+      },
+      {
+        "value": "legacy",
+        "label": "Legacy",
+        "count": 208
+      },
+      {
+        "value": "sport",
+        "label": "Sport",
+        "count": 207
+      },
+      {
+        "value": "conditioning goods",
+        "label": "Conditioning Goods",
+        "count": 190
+      },
+      {
+        "value": "crest",
+        "label": "Crest",
+        "count": 162
+      },
+      {
+        "value": "rest day",
+        "label": "Rest Day",
+        "count": 159
+      },
+      {
+        "value": "everyday",
+        "label": "Everyday",
+        "count": 149
+      },
+      {
+        "value": "apex",
+        "label": "Apex",
+        "count": 145
+      },
+      {
+        "value": "lifting goods",
+        "label": "Lifting Goods",
+        "count": 136
+      },
+      {
+        "value": "everyday seamless",
+        "label": "Everyday Seamless",
+        "count": 118
+      },
+      {
+        "value": "underwear",
+        "label": "Underwear",
+        "count": 113
+      },
+      {
+        "value": "essentials",
+        "label": "Essentials",
+        "count": 107
+      },
+      {
+        "value": "running",
+        "label": "Running",
+        "count": 102
+      },
+      {
+        "value": "adapt animal",
+        "label": "Adapt Animal",
+        "count": 100
+      },
+      {
+        "value": "collegiate",
+        "label": "Collegiate",
+        "count": 93
+      },
+      {
+        "value": "lifting icons",
+        "label": "Lifting Icons",
+        "count": 88
+      },
+      {
+        "value": "gym kit",
+        "label": "Gym Kit",
+        "count": 84
+      },
+      {
+        "value": "pause",
+        "label": "Pause",
+        "count": 84
+      },
+      {
+        "value": "whitney simmons",
+        "label": "Whitney Simmons",
+        "count": 84
+      },
+      {
+        "value": "rest day essentials",
+        "label": "Rest Day Essentials",
+        "count": 82
+      },
+      {
+        "value": "adapt fleck",
+        "label": "Adapt Fleck",
+        "count": 71
+      },
+      {
+        "value": "athleisure",
+        "label": "Athleisure",
+        "count": 71
+      },
+      {
+        "value": "bold",
+        "label": "Bold",
+        "count": 71
+      },
+      {
+        "value": "gymshark power",
+        "label": "Gymshark Power",
+        "count": 69
+      },
+      {
+        "value": "studio",
+        "label": "Studio",
+        "count": 69
+      },
+      {
+        "value": "everywear comfort",
+        "label": "Everywear Comfort",
+        "count": 66
+      },
+      {
+        "value": "conditioning club",
+        "label": "Conditioning Club",
+        "count": 63
+      },
+      {
+        "value": "sharkhead",
+        "label": "Sharkhead",
+        "count": 63
+      },
+      {
+        "value": "critical",
+        "label": "Critical",
+        "count": 59
+      },
+      {
+        "value": "lift seamless",
+        "label": "Lift Seamless",
+        "count": 59
+      },
+      {
+        "value": "adapt camo",
+        "label": "Adapt Camo",
+        "count": 58
+      },
+      {
+        "value": "element",
+        "label": "Element",
+        "count": 58
+      },
+      {
+        "value": "geo seamless",
+        "label": "Geo Seamless",
+        "count": 57
+      },
+      {
+        "value": "315",
+        "label": "315",
+        "count": 56
+      },
+      {
+        "value": "adapt",
+        "label": "Adapt",
+        "count": 54
+      },
+      {
+        "value": "elevate",
+        "label": "Elevate",
+        "count": 52
+      },
+      {
+        "value": "gfx apollo",
+        "label": "Gfx Apollo",
+        "count": 52
+      },
+      {
+        "value": "rest day sweats",
+        "label": "Rest Day Sweats",
+        "count": 51
+      },
+      {
+        "value": "reps",
+        "label": "Reps",
+        "count": 50
+      },
+      {
+        "value": "running elite",
+        "label": "Running Elite",
+        "count": 50
+      },
+      {
+        "value": "sweat seamless",
+        "label": "Sweat Seamless",
+        "count": 41
+      },
+      {
+        "value": "flex",
+        "label": "Flex",
+        "count": 38
+      },
+      {
+        "value": "heritage",
+        "label": "Heritage",
+        "count": 38
+      },
+      {
+        "value": "react",
+        "label": "React",
+        "count": 37
+      },
+      {
+        "value": "cosy luxe",
+        "label": "Cosy Luxe",
+        "count": 36
+      },
+      {
+        "value": "speed",
+        "label": "Speed",
+        "count": 35
+      },
+      {
+        "value": "gfx",
+        "label": "Gfx",
+        "count": 34
+      },
+      {
+        "value": "interval",
+        "label": "Interval",
+        "count": 34
+      },
+      {
+        "value": "gymshark x analis",
+        "label": "Gymshark X Analis",
+        "count": 31
+      },
+      {
+        "value": "retake",
+        "label": "Retake",
+        "count": 31
+      },
+      {
+        "value": "rib underlayers",
+        "label": "Rib Underlayers",
+        "count": 31
+      },
+      {
+        "value": "streetwear",
+        "label": "Streetwear",
+        "count": 31
+      },
+      {
+        "value": "strength department",
+        "label": "Strength Department",
+        "count": 30
+      },
+      {
+        "value": "tactical",
+        "label": "Tactical",
+        "count": 30
+      },
+      {
+        "value": "rest day goods",
+        "label": "Rest Day Goods",
+        "count": 29
+      },
+      {
+        "value": "gfx fraction",
+        "label": "Gfx Fraction",
+        "count": 28
+      },
+      {
+        "value": "varsity",
+        "label": "Varsity",
+        "count": 28
+      },
+      {
+        "value": "gfx legacy",
+        "label": "Gfx Legacy",
+        "count": 27
+      },
+      {
+        "value": "gymshark x cbum",
+        "label": "Gymshark X Cbum",
+        "count": 27
+      },
+      {
+        "value": "outerwear",
+        "label": "Outerwear",
+        "count": 27
+      },
+      {
+        "value": "gfx core",
+        "label": "Gfx Core",
+        "count": 25
+      },
+      {
+        "value": "lifting essentials",
+        "label": "Lifting Essentials",
+        "count": 25
+      },
+      {
+        "value": "recess",
+        "label": "Recess",
+        "count": 25
+      },
+      {
+        "value": "pulse",
+        "label": "Pulse",
+        "count": 24
+      },
+      {
+        "value": "gymshark x carlos",
+        "label": "Gymshark X Carlos",
+        "count": 23
+      },
+      {
+        "value": "gfx collegiate",
+        "label": "Gfx Collegiate",
+        "count": 22
+      },
+      {
+        "value": "gfx social club",
+        "label": "Gfx Social Club",
+        "count": 22
+      },
+      {
+        "value": "olde english",
+        "label": "Olde English",
+        "count": 21
+      },
+      {
+        "value": "shadow",
+        "label": "Shadow",
+        "count": 21
+      },
+      {
+        "value": "gains seamless",
+        "label": "Gains Seamless",
+        "count": 20
+      },
+      {
+        "value": "gs x dl",
+        "label": "Gs X Dl",
+        "count": 20
+      },
+      {
+        "value": "active",
+        "label": "Active",
+        "count": 19
+      },
+      {
+        "value": "adapt pattern",
+        "label": "Adapt Pattern",
+        "count": 19
+      },
+      {
+        "value": "activate seamless",
+        "label": "Activate Seamless",
+        "count": 18
+      },
+      {
+        "value": "energise",
+        "label": "Energise",
+        "count": 18
+      },
+      {
+        "value": "storm",
+        "label": "Storm",
+        "count": 18
+      },
+      {
+        "value": "wtflex",
+        "label": "Wtflex",
+        "count": 18
+      },
+      {
+        "value": "apex lift",
+        "label": "Apex Lift",
+        "count": 17
+      },
+      {
+        "value": "everywear warp knit",
+        "label": "Everywear Warp Knit",
+        "count": 17
+      },
+      {
+        "value": "flow",
+        "label": "Flow",
+        "count": 17
+      },
+      {
+        "value": "form conditioning",
+        "label": "Form Conditioning",
+        "count": 17
+      },
+      {
+        "value": "lux",
+        "label": "Lux",
+        "count": 17
+      },
+      {
+        "value": "prime",
+        "label": "Prime",
+        "count": 17
+      },
+      {
+        "value": "energy",
+        "label": "Energy",
+        "count": 16
+      },
+      {
+        "value": "gs10",
+        "label": "Gs10",
+        "count": 16
+      },
+      {
+        "value": "gslc lifting club",
+        "label": "Gslc Lifting Club",
+        "count": 16
+      },
+      {
+        "value": "lifting club",
+        "label": "Lifting Club",
+        "count": 16
+      },
+      {
+        "value": "block",
+        "label": "Block",
+        "count": 15
+      },
+      {
+        "value": "covered",
+        "label": "Covered",
+        "count": 15
+      },
+      {
+        "value": "gs x ld",
+        "label": "Gs X Ld",
+        "count": 15
+      },
+      {
+        "value": "everywear abstract",
+        "label": "Everywear Abstract",
+        "count": 14
+      },
+      {
+        "value": "functional fitness",
+        "label": "Functional Fitness",
+        "count": 14
+      },
+      {
+        "value": "trace",
+        "label": "Trace",
+        "count": 14
+      },
+      {
+        "value": "vibes",
+        "label": "Vibes",
+        "count": 14
+      },
+      {
+        "value": "apex limit",
+        "label": "Apex Limit",
+        "count": 13
+      },
+      {
+        "value": "form lifestyle and rest day",
+        "label": "Form Lifestyle and Rest Day",
+        "count": 13
+      },
+      {
+        "value": "gfx shark attack",
+        "label": "Gfx Shark Attack",
+        "count": 13
+      },
+      {
+        "value": "gs x sc",
+        "label": "Gs X Sc",
+        "count": 13
+      },
+      {
+        "value": "off duty",
+        "label": "Off Duty",
+        "count": 13
+      },
+      {
+        "value": "all seasons",
+        "label": "All Seasons",
+        "count": 12
+      },
+      {
+        "value": "fade graphic",
+        "label": "Fade Graphic",
+        "count": 12
+      },
+      {
+        "value": "gfx vice",
+        "label": "Gfx Vice",
+        "count": 12
+      },
+      {
+        "value": "gymshark strength",
+        "label": "Gymshark Strength",
+        "count": 12
+      },
+      {
+        "value": "heavy duty",
+        "label": "Heavy Duty",
+        "count": 12
+      },
+      {
+        "value": "hybrid",
+        "label": "Hybrid",
+        "count": 12
+      },
+      {
+        "value": "hybrid athlete",
+        "label": "Hybrid Athlete",
+        "count": 12
+      },
+      {
+        "value": "bold react",
+        "label": "Bold React",
+        "count": 11
+      },
+      {
+        "value": "canvas",
+        "label": "Canvas",
+        "count": 11
+      },
+      {
+        "value": "collective",
+        "label": "Collective",
+        "count": 11
+      },
+      {
+        "value": "evolve",
+        "label": "Evolve",
+        "count": 11
+      },
+      {
+        "value": "form",
+        "label": "Form",
+        "count": 11
+      },
+      {
+        "value": "gfx built",
+        "label": "Gfx Built",
+        "count": 11
+      },
+      {
+        "value": "gfx late adds",
+        "label": "Gfx Late Adds",
+        "count": 11
+      },
+      {
+        "value": "gfx performance",
+        "label": "Gfx Performance",
+        "count": 11
+      },
+      {
+        "value": "gymshark lifting club",
+        "label": "Gymshark Lifting Club",
+        "count": 11
+      },
+      {
+        "value": "heavyweight sweats",
+        "label": "Heavyweight Sweats",
+        "count": 11
+      },
+      {
+        "value": "steel",
+        "label": "Steel",
+        "count": 11
+      },
+      {
+        "value": "train",
+        "label": "Train",
+        "count": 11
+      },
+      {
+        "value": "volt",
+        "label": "Volt",
+        "count": 11
+      },
+      {
+        "value": "cands waistband",
+        "label": "Cands Waistband",
+        "count": 10
+      },
+      {
+        "value": "charge",
+        "label": "Charge",
+        "count": 10
+      },
+      {
+        "value": "gfx lifting 1",
+        "label": "Gfx Lifting 1",
+        "count": 10
+      },
+      {
+        "value": "gfx weightlifting club",
+        "label": "Gfx Weightlifting Club",
+        "count": 10
+      },
+      {
+        "value": "gs66",
+        "label": "Gs66",
+        "count": 10
+      },
+      {
+        "value": "sleek",
+        "label": "Sleek",
+        "count": 10
+      },
+      {
+        "value": "soft sculpt",
+        "label": "Soft Sculpt",
+        "count": 10
+      },
+      {
+        "value": "waffle",
+        "label": "Waffle",
+        "count": 10
+      },
+      {
+        "value": "adapt ombre",
+        "label": "Adapt Ombre",
+        "count": 9
+      },
+      {
+        "value": "fit",
+        "label": "Fit",
+        "count": 9
+      },
+      {
+        "value": "gfx maxed out",
+        "label": "Gfx Maxed Out",
+        "count": 9
+      },
+      {
+        "value": "gslc",
+        "label": "Gslc",
+        "count": 9
+      },
+      {
+        "value": "keep showing up",
+        "label": "Keep Showing Up",
+        "count": 9
+      },
+      {
+        "value": "lifestyle",
+        "label": "Lifestyle",
+        "count": 9
+      },
+      {
+        "value": "pump",
+        "label": "Pump",
+        "count": 9
+      },
+      {
+        "value": "swim",
+        "label": "Swim",
+        "count": 9
+      },
+      {
+        "value": "warp knit",
+        "label": "Warp Knit",
+        "count": 9
+      },
+      {
+        "value": "x series",
+        "label": "X Series",
+        "count": 9
+      },
+      {
+        "value": "atlas",
+        "label": "Atlas",
+        "count": 8
+      },
+      {
+        "value": "break your barriers",
+        "label": "Break Your Barriers",
+        "count": 8
+      },
+      {
+        "value": "diffuse",
+        "label": "Diffuse",
+        "count": 8
+      },
+      {
+        "value": "distance",
+        "label": "Distance",
+        "count": 8
+      },
+      {
+        "value": "everywear seamless",
+        "label": "Everywear Seamless",
+        "count": 8
+      },
+      {
+        "value": "forged by iron",
+        "label": "Forged By Iron",
+        "count": 8
+      },
+      {
+        "value": "gfx cherub",
+        "label": "Gfx Cherub",
+        "count": 8
+      },
+      {
+        "value": "praying hands",
+        "label": "Praying Hands",
+        "count": 8
+      },
+      {
+        "value": "premium legacy",
+        "label": "Premium Legacy",
+        "count": 8
+      },
+      {
+        "value": "running best",
+        "label": "Running Best",
+        "count": 8
+      },
+      {
+        "value": "slounge",
+        "label": "Slounge",
+        "count": 8
+      },
+      {
+        "value": "apres lift club",
+        "label": "Apres Lift Club",
+        "count": 7
+      },
+      {
+        "value": "bts trend",
+        "label": "Bts Trend",
+        "count": 7
+      },
+      {
+        "value": "cherry weight",
+        "label": "Cherry Weight",
+        "count": 7
+      },
+      {
+        "value": "contrast seamless",
+        "label": "Contrast Seamless",
+        "count": 7
+      },
+      {
+        "value": "corset seamless",
+        "label": "Corset Seamless",
+        "count": 7
+      },
+      {
+        "value": "diffuse seamless",
+        "label": "Diffuse Seamless",
+        "count": 7
+      },
+      {
+        "value": "gfx lifting apparel",
+        "label": "Gfx Lifting Apparel",
+        "count": 7
+      },
+      {
+        "value": "gymshark x frazzetta warrior",
+        "label": "Gymshark X Frazzetta Warrior",
+        "count": 7
+      },
+      {
+        "value": "juicy peach",
+        "label": "Juicy Peach",
+        "count": 7
+      },
+      {
+        "value": "retro collegiate",
+        "label": "Retro Collegiate",
+        "count": 7
+      },
+      {
+        "value": "script embroidery graphic",
+        "label": "Script Embroidery Graphic",
+        "count": 7
+      },
+      {
+        "value": "trophy",
+        "label": "Trophy",
+        "count": 7
+      },
+      {
+        "value": "we do gym",
+        "label": "We Do Gym",
+        "count": 7
+      },
+      {
+        "value": "athlete division graphic",
+        "label": "Athlete Division Graphic",
+        "count": 6
+      },
+      {
+        "value": "athlete series",
+        "label": "Athlete Series",
+        "count": 6
+      },
+      {
+        "value": "campus classics",
+        "label": "Campus Classics",
+        "count": 6
+      },
+      {
+        "value": "chainstitch wordmark graphic",
+        "label": "Chainstitch Wordmark Graphic",
+        "count": 6
+      },
+      {
+        "value": "clean contour seamless",
+        "label": "Clean Contour Seamless",
+        "count": 6
+      },
+      {
+        "value": "cotton seamless",
+        "label": "Cotton Seamless",
+        "count": 6
+      },
+      {
+        "value": "crinkle",
+        "label": "Crinkle",
+        "count": 6
+      },
+      {
+        "value": "doberman graphic",
+        "label": "Doberman Graphic",
+        "count": 6
+      },
+      {
+        "value": "est 2012",
+        "label": "Est 2012",
+        "count": 6
+      },
+      {
+        "value": "everywear graphics",
+        "label": "Everywear Graphics",
+        "count": 6
+      },
+      {
+        "value": "gfx heavy duty",
+        "label": "Gfx Heavy Duty",
+        "count": 6
+      },
+      {
+        "value": "gfx heavy duty apparel",
+        "label": "Gfx Heavy Duty Apparel",
+        "count": 6
+      },
+      {
+        "value": "gfx heavyflex",
+        "label": "Gfx Heavyflex",
+        "count": 6
+      },
+      {
+        "value": "gfx lifting",
+        "label": "Gfx Lifting",
+        "count": 6
+      },
+      {
+        "value": "gfx lifting 2",
+        "label": "Gfx Lifting 2",
+        "count": 6
+      },
+      {
+        "value": "gfx lifting 3",
+        "label": "Gfx Lifting 3",
+        "count": 6
+      },
+      {
+        "value": "gfx lifting essentials",
+        "label": "Gfx Lifting Essentials",
+        "count": 6
+      },
+      {
+        "value": "gfx love hearts",
+        "label": "Gfx Love Hearts",
+        "count": 6
+      },
+      {
+        "value": "gymshark x olympia",
+        "label": "Gymshark X Olympia",
+        "count": 6
+      },
+      {
+        "value": "heavy duty graphic",
+        "label": "Heavy Duty Graphic",
+        "count": 6
+      },
+      {
+        "value": "lifting club ribbed",
+        "label": "Lifting Club Ribbed",
+        "count": 6
+      },
+      {
+        "value": "light hold",
+        "label": "Light Hold",
+        "count": 6
+      },
+      {
+        "value": "marl seamless",
+        "label": "Marl Seamless",
+        "count": 6
+      },
+      {
+        "value": "mesh",
+        "label": "Mesh",
+        "count": 6
+      },
+      {
+        "value": "olympic bar",
+        "label": "Olympic Bar",
+        "count": 6
+      },
+      {
+        "value": "re rack",
+        "label": "Re Rack",
+        "count": 6
+      },
+      {
+        "value": "stacked gymshark graphic",
+        "label": "Stacked Gymshark Graphic",
+        "count": 6
+      },
+      {
+        "value": "valentines",
+        "label": "Valentines",
+        "count": 6
+      },
+      {
+        "value": "vintage legacy",
+        "label": "Vintage Legacy",
+        "count": 6
+      },
+      {
+        "value": "worn crest graphic",
+        "label": "Worn Crest Graphic",
+        "count": 6
+      },
+      {
+        "value": "athletic department",
+        "label": "Athletic Department",
+        "count": 5
+      },
+      {
+        "value": "back gains",
+        "label": "Back Gains",
+        "count": 5
+      },
+      {
+        "value": "blur seamless",
+        "label": "Blur Seamless",
+        "count": 5
+      },
+      {
+        "value": "control",
+        "label": "Control",
+        "count": 5
+      },
+      {
+        "value": "crossover",
+        "label": "Crossover",
+        "count": 5
+      },
+      {
+        "value": "exploded wordmark",
+        "label": "Exploded Wordmark",
+        "count": 5
+      },
+      {
+        "value": "founders",
+        "label": "Founders",
+        "count": 5
+      },
+      {
+        "value": "gfx 00s",
+        "label": "Gfx 00S",
+        "count": 5
+      },
+      {
+        "value": "gfx activated",
+        "label": "Gfx Activated",
+        "count": 5
+      },
+      {
+        "value": "gfx ironworks",
+        "label": "Gfx Ironworks",
+        "count": 5
+      },
+      {
+        "value": "gfx pump cover",
+        "label": "Gfx Pump Cover",
+        "count": 5
+      },
+      {
+        "value": "gfx strength dept",
+        "label": "Gfx Strength Dept",
+        "count": 5
+      },
+      {
+        "value": "global lifting",
+        "label": "Global Lifting",
+        "count": 5
+      },
+      {
+        "value": "glutey calls grapic",
+        "label": "Glutey Calls Grapic",
+        "count": 5
+      },
+      {
+        "value": "gs x no",
+        "label": "Gs X No",
+        "count": 5
+      },
+      {
+        "value": "gscc graphic",
+        "label": "Gscc Graphic",
+        "count": 5
+      },
+      {
+        "value": "gymshark x saalt studios",
+        "label": "Gymshark X Saalt Studios",
+        "count": 5
+      },
+      {
+        "value": "impact",
+        "label": "Impact",
+        "count": 5
+      },
+      {
+        "value": "lifting club flex graphic",
+        "label": "Lifting Club Flex Graphic",
+        "count": 5
+      },
+      {
+        "value": "military",
+        "label": "Military",
+        "count": 5
+      },
+      {
+        "value": "sandc",
+        "label": "Sandc",
+        "count": 5
+      },
+      {
+        "value": "vision",
+        "label": "Vision",
+        "count": 5
+      },
+      {
+        "value": "athlete bootleg graphics",
+        "label": "Athlete Bootleg Graphics",
+        "count": 4
+      },
+      {
+        "value": "check seamless",
+        "label": "Check Seamless",
+        "count": 4
+      },
+      {
+        "value": "collegiate script graphic",
+        "label": "Collegiate Script Graphic",
+        "count": 4
+      },
+      {
+        "value": "cosy fleece",
+        "label": "Cosy Fleece",
+        "count": 4
+      },
+      {
+        "value": "eagle script graphic",
+        "label": "Eagle Script Graphic",
+        "count": 4
+      },
+      {
+        "value": "for the lifters",
+        "label": "For the Lifters",
+        "count": 4
+      },
+      {
+        "value": "fraction",
+        "label": "Fraction",
+        "count": 4
+      },
+      {
+        "value": "gfx dead lift",
+        "label": "Gfx Dead Lift",
+        "count": 4
+      },
+      {
+        "value": "gfx i heart gym",
+        "label": "Gfx I Heart Gym",
+        "count": 4
+      },
+      {
+        "value": "gfx jelly legs",
+        "label": "Gfx Jelly Legs",
+        "count": 4
+      },
+      {
+        "value": "gritty muscle mommy",
+        "label": "Gritty Muscle Mommy",
+        "count": 4
+      },
+      {
+        "value": "gslc baselayer",
+        "label": "Gslc Baselayer",
+        "count": 4
+      },
+      {
+        "value": "gsrc",
+        "label": "Gsrc",
+        "count": 4
+      },
+      {
+        "value": "linear seamless",
+        "label": "Linear Seamless",
+        "count": 4
+      },
+      {
+        "value": "modesty essentials",
+        "label": "Modesty Essentials",
+        "count": 4
+      },
+      {
+        "value": "run club",
+        "label": "Run Club",
+        "count": 4
+      },
+      {
+        "value": "superset",
+        "label": "Superset",
+        "count": 4
+      },
+      {
+        "value": "to from",
+        "label": "To From",
+        "count": 4
+      },
+      {
+        "value": "tonal character",
+        "label": "Tonal Character",
+        "count": 4
+      },
+      {
+        "value": "washed 66",
+        "label": "Washed 66",
+        "count": 4
+      },
+      {
+        "value": "adapt pattern 1",
+        "label": "Adapt Pattern 1",
+        "count": 3
+      },
+      {
+        "value": "ath dept",
+        "label": "Ath Dept",
+        "count": 3
+      },
+      {
+        "value": "authentic apparel graphic",
+        "label": "Authentic Apparel Graphic",
+        "count": 3
+      },
+      {
+        "value": "black friday",
+        "label": "Black Friday",
+        "count": 3
+      },
+      {
+        "value": "double bicep",
+        "label": "Double Bicep",
+        "count": 3
+      },
+      {
+        "value": "flying weights",
+        "label": "Flying Weights",
+        "count": 3
+      },
+      {
+        "value": "gfx american muscle",
+        "label": "Gfx American Muscle",
+        "count": 3
+      },
+      {
+        "value": "gfx conditioning goods",
+        "label": "Gfx Conditioning Goods",
+        "count": 3
+      },
+      {
+        "value": "gfx freehand",
+        "label": "Gfx Freehand",
+        "count": 3
+      },
+      {
+        "value": "gfx property of",
+        "label": "Gfx Property of",
+        "count": 3
+      },
+      {
+        "value": "gfx strong girl lifting club",
+        "label": "Gfx Strong Girl Lifting Club",
+        "count": 3
+      },
+      {
+        "value": "gfx training dept uk",
+        "label": "Gfx Training Dept Uk",
+        "count": 3
+      },
+      {
+        "value": "gs x ws",
+        "label": "Gs X Ws",
+        "count": 3
+      },
+      {
+        "value": "panther graphic",
+        "label": "Panther Graphic",
+        "count": 3
+      },
+      {
+        "value": "pursuit",
+        "label": "Pursuit",
+        "count": 3
+      },
+      {
+        "value": "running better",
+        "label": "Running Better",
+        "count": 3
+      },
+      {
+        "value": "strength stars graphic",
+        "label": "Strength Stars Graphic",
+        "count": 3
+      },
+      {
+        "value": "tectonic",
+        "label": "Tectonic",
+        "count": 3
+      },
+      {
+        "value": "acc lifting graphic",
+        "label": "Acc Lifting Graphic",
+        "count": 2
+      },
+      {
+        "value": "apex m",
+        "label": "Apex M",
+        "count": 2
+      },
+      {
+        "value": "apollo",
+        "label": "Apollo",
+        "count": 2
+      },
+      {
+        "value": "aspect",
+        "label": "Aspect",
+        "count": 2
+      },
+      {
+        "value": "build your legacy",
+        "label": "Build Your Legacy",
+        "count": 2
+      },
+      {
+        "value": "bulking season",
+        "label": "Bulking Season",
+        "count": 2
+      },
+      {
+        "value": "compound",
+        "label": "Compound",
+        "count": 2
+      },
+      {
+        "value": "deadweight",
+        "label": "Deadweight",
+        "count": 2
+      },
+      {
+        "value": "fitness apparel",
+        "label": "Fitness Apparel",
+        "count": 2
+      },
+      {
+        "value": "gfx bad girls lift heavy",
+        "label": "Gfx Bad Girls Lift Heavy",
+        "count": 2
+      },
+      {
+        "value": "gfx dumbells",
+        "label": "Gfx Dumbells",
+        "count": 2
+      },
+      {
+        "value": "gfx lifting dept",
+        "label": "Gfx Lifting Dept",
+        "count": 2
+      },
+      {
+        "value": "gfx minimal label",
+        "label": "Gfx Minimal Label",
+        "count": 2
+      },
+      {
+        "value": "gfx motorcross",
+        "label": "Gfx Motorcross",
+        "count": 2
+      },
+      {
+        "value": "gfx novelty",
+        "label": "Gfx Novelty",
+        "count": 2
+      },
+      {
+        "value": "gfx phys ed",
+        "label": "Gfx Phys Ed",
+        "count": 2
+      },
+      {
+        "value": "gfx slice",
+        "label": "Gfx Slice",
+        "count": 2
+      },
+      {
+        "value": "gfx spartan man",
+        "label": "Gfx Spartan Man",
+        "count": 2
+      },
+      {
+        "value": "gfx tattoo",
+        "label": "Gfx Tattoo",
+        "count": 2
+      },
+      {
+        "value": "gfx worldwide",
+        "label": "Gfx Worldwide",
+        "count": 2
+      },
+      {
+        "value": "graphics",
+        "label": "Graphics",
+        "count": 2
+      },
+      {
+        "value": "grunge seamless",
+        "label": "Grunge Seamless",
+        "count": 2
+      },
+      {
+        "value": "gs patch graphic",
+        "label": "Gs Patch Graphic",
+        "count": 2
+      },
+      {
+        "value": "gslc script",
+        "label": "Gslc Script",
+        "count": 2
+      },
+      {
+        "value": "gsrc stencil graphic",
+        "label": "Gsrc Stencil Graphic",
+        "count": 2
+      },
+      {
+        "value": "gymshark lifestyle club graphic",
+        "label": "Gymshark Lifestyle Club Graphic",
+        "count": 2
+      },
+      {
+        "value": "gymshark lifting",
+        "label": "Gymshark Lifting",
+        "count": 2
+      },
+      {
+        "value": "heavy duty bro graphic",
+        "label": "Heavy Duty Bro Graphic",
+        "count": 2
+      },
+      {
+        "value": "lifestyle club",
+        "label": "Lifestyle Club",
+        "count": 2
+      },
+      {
+        "value": "lifting seamless",
+        "label": "Lifting Seamless",
+        "count": 2
+      },
+      {
+        "value": "liftmas",
+        "label": "Liftmas",
+        "count": 2
+      },
+      {
+        "value": "maximise",
+        "label": "Maximise",
+        "count": 2
+      },
+      {
+        "value": "movin metal",
+        "label": "Movin Metal",
+        "count": 2
+      },
+      {
+        "value": "new era",
+        "label": "New Era",
+        "count": 2
+      },
+      {
+        "value": "praying hands graphic",
+        "label": "Praying Hands Graphic",
+        "count": 2
+      },
+      {
+        "value": "retro sports",
+        "label": "Retro Sports",
+        "count": 2
+      },
+      {
+        "value": "strength fitness and lifestyle graphic",
+        "label": "Strength Fitness and Lifestyle Graphic",
+        "count": 2
+      },
+      {
+        "value": "summer tie dye",
+        "label": "Summer Tie Dye",
+        "count": 2
+      },
+      {
+        "value": "versatile",
+        "label": "Versatile",
+        "count": 2
+      },
+      {
+        "value": "500kg t shirt",
+        "label": "500Kg T Shirt",
+        "count": 1
+      },
+      {
+        "value": "adapt ombre triangle",
+        "label": "Adapt Ombre Triangle",
+        "count": 1
+      },
+      {
+        "value": "adapt pattern 2",
+        "label": "Adapt Pattern 2",
+        "count": 1
+      },
+      {
+        "value": "barbell cherry",
+        "label": "Barbell Cherry",
+        "count": 1
+      },
+      {
+        "value": "barbell hearts",
+        "label": "Barbell Hearts",
+        "count": 1
+      },
+      {
+        "value": "brilliant basics",
+        "label": "Brilliant Basics",
+        "count": 1
+      },
+      {
+        "value": "built",
+        "label": "Built",
+        "count": 1
+      },
+      {
+        "value": "committed to the craft",
+        "label": "Committed To the Craft",
+        "count": 1
+      },
+      {
+        "value": "conditioning graphic",
+        "label": "Conditioning Graphic",
+        "count": 1
+      },
+      {
+        "value": "elevate chain",
+        "label": "Elevate Chain",
+        "count": 1
+      },
+      {
+        "value": "for the ones",
+        "label": "For the Ones",
+        "count": 1
+      },
+      {
+        "value": "francis ngannou",
+        "label": "Francis Ngannou",
+        "count": 1
+      },
+      {
+        "value": "gfx ath dept",
+        "label": "Gfx Ath Dept",
+        "count": 1
+      },
+      {
+        "value": "gfx collegiate shadow",
+        "label": "Gfx Collegiate Shadow",
+        "count": 1
+      },
+      {
+        "value": "gfx drip",
+        "label": "Gfx Drip",
+        "count": 1
+      },
+      {
+        "value": "gfx heavy duty lifter",
+        "label": "Gfx Heavy Duty Lifter",
+        "count": 1
+      },
+      {
+        "value": "gfx i love squats",
+        "label": "Gfx I Love Squats",
+        "count": 1
+      },
+      {
+        "value": "gfx its giving gym",
+        "label": "Gfx Its Giving Gym",
+        "count": 1
+      },
+      {
+        "value": "gfx lift heavy",
+        "label": "Gfx Lift Heavy",
+        "count": 1
+      },
+      {
+        "value": "gfx lifting babe",
+        "label": "Gfx Lifting Babe",
+        "count": 1
+      },
+      {
+        "value": "gfx lifting baddie",
+        "label": "Gfx Lifting Baddie",
+        "count": 1
+      },
+      {
+        "value": "gfx oversized sharkhead",
+        "label": "Gfx Oversized Sharkhead",
+        "count": 1
+      },
+      {
+        "value": "gfx strength department",
+        "label": "Gfx Strength Department",
+        "count": 1
+      },
+      {
+        "value": "gfx strong women",
+        "label": "Gfx Strong Women",
+        "count": 1
+      },
+      {
+        "value": "gift giving",
+        "label": "Gift Giving",
+        "count": 1
+      },
+      {
+        "value": "grade",
+        "label": "Grade",
+        "count": 1
+      },
+      {
+        "value": "grunge",
+        "label": "Grunge",
+        "count": 1
+      },
+      {
+        "value": "gymshark gym collabs",
+        "label": "Gymshark Gym Collabs",
+        "count": 1
+      },
+      {
+        "value": "high summer trend",
+        "label": "High Summer Trend",
+        "count": 1
+      },
+      {
+        "value": "hybrid essentials",
+        "label": "Hybrid Essentials",
+        "count": 1
+      },
+      {
+        "value": "hyper lift",
+        "label": "Hyper Lift",
+        "count": 1
+      },
+      {
+        "value": "i heart gym",
+        "label": "I Heart Gym",
+        "count": 1
+      },
+      {
+        "value": "lifestyle woven track set",
+        "label": "Lifestyle Woven Track Set",
+        "count": 1
+      },
+      {
+        "value": "lifting club apparel",
+        "label": "Lifting Club Apparel",
+        "count": 1
+      },
+      {
+        "value": "mesh shorts",
+        "label": "Mesh Shorts",
+        "count": 1
+      },
+      {
+        "value": "minimal series",
+        "label": "Minimal Series",
+        "count": 1
+      },
+      {
+        "value": "muscle kids",
+        "label": "Muscle Kids",
+        "count": 1
+      },
+      {
+        "value": "os heavyweight sweats",
+        "label": "Os Heavyweight Sweats",
+        "count": 1
+      },
+      {
+        "value": "physical education",
+        "label": "Physical Education",
+        "count": 1
+      },
+      {
+        "value": "retail gfx",
+        "label": "Retail Gfx",
+        "count": 1
+      },
+      {
+        "value": "rtc projects",
+        "label": "Rtc Projects",
+        "count": 1
+      },
+      {
+        "value": "scribble",
+        "label": "Scribble",
+        "count": 1
+      },
+      {
+        "value": "sf washed",
+        "label": "Sf Washed",
+        "count": 1
+      },
+      {
+        "value": "strength and conditioning",
+        "label": "Strength and Conditioning",
+        "count": 1
+      },
+      {
+        "value": "workout gear",
+        "label": "Workout Gear",
+        "count": 1
+      },
+      {
+        "value": "xxl",
+        "label": "Xxl",
+        "count": 1
+      }
+    ],
+    "color": [
+      {
+        "value": "black",
+        "label": "Black",
+        "count": 2006
+      },
+      {
+        "value": "blue",
+        "label": "Blue",
+        "count": 1426
+      },
+      {
+        "value": "grey",
+        "label": "Grey",
+        "count": 1128
+      },
+      {
+        "value": "brown",
+        "label": "Brown",
+        "count": 850
+      },
+      {
+        "value": "green",
+        "label": "Green",
+        "count": 839
+      },
+      {
+        "value": "white",
+        "label": "White",
+        "count": 685
+      },
+      {
+        "value": "pink",
+        "label": "Pink",
+        "count": 655
+      },
+      {
+        "value": "purple",
+        "label": "Purple",
+        "count": 424
+      },
+      {
+        "value": "red",
+        "label": "Red",
+        "count": 353
+      },
+      {
+        "value": "orange",
+        "label": "Orange",
+        "count": 135
+      },
+      {
+        "value": "teal",
+        "label": "Teal",
+        "count": 118
+      },
+      {
+        "value": "yellow",
+        "label": "Yellow",
+        "count": 103
+      },
+      {
+        "value": "multi",
+        "label": "Multi",
+        "count": 3
+      },
+      {
+        "value": "charcoal",
+        "label": "Charcoal",
+        "count": 1
+      },
+      {
+        "value": "cream",
+        "label": "Cream",
+        "count": 1
+      },
+      {
+        "value": "navy",
+        "label": "Navy",
+        "count": 1
+      },
+      {
+        "value": "terrace blue",
+        "label": "Terrace Blue",
+        "count": 1
+      }
+    ],
+    "fit": [
+      {
+        "value": "oversized",
+        "label": "Oversized",
+        "count": 1579
+      },
+      {
+        "value": "slim fit",
+        "label": "Slim Fit",
+        "count": 898
+      },
+      {
+        "value": "regular fit",
+        "label": "Regular Fit",
+        "count": 893
+      },
+      {
+        "value": "light support",
+        "label": "Light Support",
+        "count": 455
+      },
+      {
+        "value": "medium support",
+        "label": "Medium Support",
+        "count": 174
+      },
+      {
+        "value": "muscle",
+        "label": "Muscle",
+        "count": 92
+      },
+      {
+        "value": "compression",
+        "label": "Compression",
+        "count": 69
+      },
+      {
+        "value": "extreme oversized",
+        "label": "Extreme Oversized",
+        "count": 63
+      },
+      {
+        "value": "high support",
+        "label": "High Support",
+        "count": 42
+      },
+      {
+        "value": "tall",
+        "label": "Tall",
+        "count": 17
+      },
+      {
+        "value": "short",
+        "label": "Short",
+        "count": 16
+      },
+      {
+        "value": "body fit",
+        "label": "Body Fit",
+        "count": 10
+      },
+      {
+        "value": "boxy",
+        "label": "Boxy",
+        "count": 2
+      },
+      {
+        "value": "mid rise",
+        "label": "Mid Rise",
+        "count": 2
+      },
+      {
+        "value": "one size",
+        "label": "One Size",
+        "count": 2
+      },
+      {
+        "value": "underwear",
+        "label": "Underwear",
+        "count": 2
+      },
+      {
+        "value": "zero support",
+        "label": "Zero Support",
+        "count": 2
+      }
+    ],
+    "support": [
+      {
+        "value": "light support",
+        "label": "Light Support",
+        "count": 459
+      },
+      {
+        "value": "medium support",
+        "label": "Medium Support",
+        "count": 203
+      },
+      {
+        "value": "high support",
+        "label": "High Support",
+        "count": 168
+      },
+      {
+        "value": "medium",
+        "label": "Medium",
+        "count": 10
+      },
+      {
+        "value": "zero support",
+        "label": "Zero Support",
+        "count": 2
+      },
+      {
+        "value": "low support",
+        "label": "Low Support",
+        "count": 1
+      }
+    ],
+    "features": [
+      {
+        "value": "sweat wicking",
+        "label": "Sweat Wicking",
+        "count": 1466
+      },
+      {
+        "value": "lightweight",
+        "label": "Lightweight",
+        "count": 1405
+      },
+      {
+        "value": "breathable",
+        "label": "Breathable",
+        "count": 1356
+      },
+      {
+        "value": "seamless",
+        "label": "Seamless",
+        "count": 1238
+      },
+      {
+        "value": "pockets",
+        "label": "Pockets",
+        "count": 1117
+      },
+      {
+        "value": "adjustable waistbands",
+        "label": "Adjustable Waistbands",
+        "count": 603
+      },
+      {
+        "value": "zip pocket",
+        "label": "Zip Pocket",
+        "count": 223
+      },
+      {
+        "value": "reflective branding",
+        "label": "Reflective Branding",
+        "count": 150
+      },
+      {
+        "value": "bum scrunch",
+        "label": "Bum Scrunch",
+        "count": 142
+      },
+      {
+        "value": "abstract pattern",
+        "label": "Abstract Pattern",
+        "count": 64
+      },
+      {
+        "value": "camo pattern",
+        "label": "Camo Pattern",
+        "count": 54
+      },
+      {
+        "value": "non restrictive",
+        "label": "Non Restrictive",
+        "count": 36
+      },
+      {
+        "value": "animal pattern",
+        "label": "Animal Pattern",
+        "count": 30
+      },
+      {
+        "value": "graphics pattern",
+        "label": "Graphics Pattern",
+        "count": 27
+      },
+      {
+        "value": "tie dye pattern",
+        "label": "Tie Dye Pattern",
+        "count": 11
+      },
+      {
+        "value": "fleck pattern",
+        "label": "Fleck Pattern",
+        "count": 6
+      },
+      {
+        "value": "ombre pattern",
+        "label": "Ombre Pattern",
+        "count": 5
+      },
+      {
+        "value": "plain pattern",
+        "label": "Plain Pattern",
+        "count": 1
+      }
+    ],
+    "season": [
+      {
+        "value": "aw25",
+        "label": "Aw25",
+        "count": 1477
+      },
+      {
+        "value": "ss25",
+        "label": "Ss25",
+        "count": 1289
+      },
+      {
+        "value": "ss26",
+        "label": "Ss26",
+        "count": 1178
+      },
+      {
+        "value": "aw22",
+        "label": "Aw22",
+        "count": 793
+      },
+      {
+        "value": "aw23",
+        "label": "Aw23",
+        "count": 681
+      },
+      {
+        "value": "ss24",
+        "label": "Ss24",
+        "count": 634
+      },
+      {
+        "value": "ss22",
+        "label": "Ss22",
+        "count": 595
+      },
+      {
+        "value": "ss23",
+        "label": "Ss23",
+        "count": 547
+      },
+      {
+        "value": "aw21",
+        "label": "Aw21",
+        "count": 467
+      },
+      {
+        "value": "aw24",
+        "label": "Aw24",
+        "count": 288
+      },
+      {
+        "value": "ss21",
+        "label": "Ss21",
+        "count": 5
+      },
+      {
+        "value": "ss20",
+        "label": "Ss20",
+        "count": 2
+      }
+    ],
+    "availability": [
+      {
+        "value": "sale",
+        "label": "Sale",
+        "count": 7981
+      },
+      {
+        "value": "active",
+        "label": "Active",
+        "count": 691
+      },
+      {
+        "value": "coming soon",
+        "label": "Coming Soon",
+        "count": 58
+      }
+    ]
+  }
+}
