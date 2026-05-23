@@ -1,11 +1,24 @@
 services:
+  closet-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8080"
+    environment:
+      DATASET: ${DATASET:-gymshark}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    volumes:
+      - ./data:/app/data:ro
+
   recommender-agent:
     build:
       context: ./recommender-agent
     ports:
       - "8001:8000"
     environment:
-      CATALOG_PATH: /data/dataset2_products.json
+      DATASET: ${DATASET:-gymshark}
+      CATALOG_PATH: /data/gymshark_products.json
       GYMSHARK_CATALOG_PATH: /data/gymshark_products.json
       DATASET2_CATALOG_PATH: /data/dataset2_products.json
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
