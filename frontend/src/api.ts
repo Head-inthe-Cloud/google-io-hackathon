@@ -1,0 +1,308 @@
+/**
+ * API Service Layer — connects the frontend to the FastAPI backend.
+ *
+ * All backend calls are routed through `/api/*` which is proxied
+ * to the FastAPI backend (default: http://localhost:8000) via Vite's
+ * dev proxy or the Express server's proxy in production.
+ */
+
+import type { ClosetItem, GarmentCategory, OutfitRecommendation, SourcedProduct } from "./types";
+
+// ---------------------------------------------------------------------------
+// Configuration
+// ---------------------------------------------------------------------------
+const API_BASE = ""; // Relative — goes through the proxy
+
+// ---------------------------------------------------------------------------
+// Catalog
+// ---------------------------------------------------------------------------
+export interface CatalogFilters {
+  gender?: string;       // "mens" | "womens"
+  category?: string;
+  search?: string;
+  color?: string;
+  activity?: string;
+  collection?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface CatalogResponse {
+  total: number;
+  count: number;
+  offset: number;
+  limit: number;
+  items: BackendCatalogItem[];
+}
+
+export interface BackendCatalogItem {
+  id: number;
+  name: string;
+  image_url: string;
+  imageUrl: string;
+  description: string | null;
+  vibe: string | null;
+  category: string;
+  gender: string;
+  color: string | null;
+  colors: string[] | null;
+  pattern: string | null;
+  fit: string | null;
+  activity: string | null;
+  collection: string | null;
+  product_link: string | null;
+  style_tags: string[] | null;
+  brand: string;
+}
+
+/** Map a backend catalog item to the frontend ClosetItem format. */
+export function catalogItemToClosetItem(item: BackendCatalogItem): ClosetItem {
+  // Map backend categories to frontend GarmentCategory
+  const categoryMap: Record<string, GarmentCategory> = {
+    "Tops": "Tops",
+    "Bottoms": "Bottoms",
+    "Outerwear": "Outerwear",
+    "Sports Bras": "Tops",       // Map to closest frontend category
+    "Accessories": "Accessories",
+    "One-Piece": "Tops",         // Map to closest frontend category
+  };
+  const mappedCategory = categoryMap[item.category] || "Tops";
+
+  // Map backend gender to frontend gender
+  const genderMap: Record<string, "male" | "female" | "unisex"> = {
+    "mens": "male",
+    "womens": "female",
+  };
+
+  return {
+    id: `catalog-${item.id}`,
+    name: item.name,
+    category: mappedCategory,
+    color: item.color || "Unknown",
+    pattern: item.pattern || item.fit || "Standard",
+    vibe: item.description || item.vibe || "A stylish garment.",
+    imageUrl: item.image_url || item.imageUrl,
+    isCustom: false,
+    brand: item.brand || "Gymshark",
+    gender: genderMap[item.gender] || "unisex",
+  };
+}
+
+/** Fetch catalog items with filtering and pagination. */
+export async function fetchCatalog(filters: CatalogFilters = {}): Promise<CatalogResponse> {
+  const params = new URLSearchParams();
+  if (filters.gender) params.set("gender", filters.gender);
+  if (filters.category) params.set("category", filters.category);
+  if (filters.search) params.set("search", filters.search);
+  if (filters.color) params.set("color", filters.color);
+  if (filters.activity) params.set("activity", filters.activity);
+  if (filters.collection) params.set("collection", filters.collection);
+  if (filters.limit) params.set("limit", String(filters.limit));
+  if (filters.offset) params.set("offset", String(filters.offset));
+
+  const res = await fetch(`${API_BASE}/api/catalog?${params.toString()}`);
+  if (!res.ok) throw new Error(`Catalog fetch failed: ${res.status}`);
+  return res.json();
+}
+
+/** Fetch category counts. */
+export async function fetchCategories(): Promise<Record<string, number>> {
+  const res = await fetch(`${API_BASE}/api/catalog/categories`);
+  if (!res.ok) throw new Error(`Categories fetch failed: ${res.status}`);
+  const data = await res.json();
+  return data.categories;
+}
+
+/** Fetch a single catalog item. */
+export async function fetchCatalogItem(itemId: number): Promise<BackendCatalogItem> {
+  const res = await fetch(`${API_BASE}/api/catalog/${itemId}`);
+  if (!res.ok) throw new Error(`Catalog item fetch failed: ${res.status}`);
+  return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Analyze Item (Gemini Vision)
+// ---------------------------------------------------------------------------
+export interface AnalyzeItemResult {
+  id: string;
+  name: string;
+  category: string;
+  color: string;
+  pattern: string;
+  vibe: string;
+  isMock: boolean;
+}
+
+export async function analyzeItem(imageBase64: string, filename?: string): Promise<AnalyzeItemResult> {
+  const res = await fetch(`${API_BASE}/api/analyze-item`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ image: imageBase64, filename }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Analysis failed" }));
+    throw new Error(err.detail || err.error || "Analysis failed");
+  }
+  return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Recommendations
+// ---------------------------------------------------------------------------
+export interface RecommendParams {
+  preferences?: string[];
+  closet?: ClosetItem[];
+  selfieDescription?: string;
+  prompt?: string;
+  inspirationImage?: string | null;
+  styleVector?: number[];
+  gender?: string;
+}
+
+export interface RecommendResponse {
+  recommendations: OutfitRecommendation[];
+}
+
+export async function getRecommendations(params: RecommendParams): Promise<RecommendResponse> {
+  const body: any = {
+    preferences: params.preferences || [],
+    selfieDescription: params.selfieDescription || "Average build, neutral undertone",
+    prompt: params.prompt || "A stylish casual look",
+    styleVector: params.styleVector || [],
+    gender: params.gender,
+  };
+
+  // Send closet items if provided
+  if (params.closet && params.closet.length > 0) {
+    body.closet = params.closet.map(item => ({
+      id: item.id,
+      name: item.name,
+      category: item.category,
+      color: item.color,
+      pattern: item.pattern,
+      vibe: item.vibe,
+      description: item.vibe,
+    }));
+  }
+
+  if (params.inspirationImage) {
+    body.inspirationImage = params.inspirationImage;
+  }
+
+  const res = await fetch(`${API_BASE}/api/recommend`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Recommendation failed" }));
+    throw new Error(err.detail || "Recommendation failed");
+  }
+  return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Virtual Try-On (Replicate-based)
+// ---------------------------------------------------------------------------
+export interface TryOnResult {
+  status: string;
+  replicate_id?: string;
+  output_url?: string;
+  message?: string;
+}
+
+export async function triggerVirtualTryOn(selfieUrl: string, garmentUrl: string): Promise<TryOnResult> {
+  const res = await fetch(`${API_BASE}/api/virtual-try-on`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ selfie_url: selfieUrl, garment_url: garmentUrl }),
+  });
+  if (!res.ok) throw new Error(`Try-on trigger failed: ${res.status}`);
+  return res.json();
+}
+
+export async function checkTryOnStatus(predictionId: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/virtual-try-on/status/${predictionId}`);
+  if (!res.ok) throw new Error(`Try-on status check failed: ${res.status}`);
+  return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Synthetic Try-On Image Generation (Gemini)
+// ---------------------------------------------------------------------------
+export interface GenerateTryOnParams {
+  outfitName?: string;
+  prompt?: string;
+  itemsStr?: string;
+  selfieBase64?: string | null;
+}
+
+export interface GenerateTryOnResult {
+  imageUrl?: string;
+  simulatedUrl?: string;
+  error?: string;
+}
+
+export async function generateTryOnImage(params: GenerateTryOnParams): Promise<GenerateTryOnResult> {
+  const res = await fetch(`${API_BASE}/api/generate-try-on`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Generation failed" }));
+    throw new Error(err.detail || err.error || "Generation failed");
+  }
+  return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Sessions (optional — for persistent session management)
+// ---------------------------------------------------------------------------
+export interface CreateSessionParams {
+  selfie_url?: string;
+  gender_preference?: string;
+  favorite_colors?: string[];
+  disliked_styles?: string[];
+  occasion?: string;
+  notes?: string;
+}
+
+export async function createSession(params: CreateSessionParams = {}): Promise<{ session_id: number; session_token: string }> {
+  const res = await fetch(`${API_BASE}/api/sessions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) throw new Error(`Session creation failed: ${res.status}`);
+  return res.json();
+}
+
+export async function getSession(token: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/sessions/${token}`);
+  if (!res.ok) throw new Error(`Session fetch failed: ${res.status}`);
+  return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Upload URL (S3 presigned)
+// ---------------------------------------------------------------------------
+export async function getUploadUrl(filename: string): Promise<{ upload_url: string; file_url: string }> {
+  const res = await fetch(`${API_BASE}/api/upload-url`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ filename }),
+  });
+  if (!res.ok) throw new Error(`Upload URL generation failed: ${res.status}`);
+  return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Health Check
+// ---------------------------------------------------------------------------
+export async function checkHealth(): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/health`);
+  if (!res.ok) throw new Error(`Health check failed: ${res.status}`);
+  return res.json();
+}

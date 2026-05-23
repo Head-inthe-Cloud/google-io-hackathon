@@ -1,11 +1,12 @@
 import os
 import json
 import uuid
+import base64
 from pathlib import Path
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Depends, Query
+from fastapi import FastAPI, HTTPException, Depends, Query, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import text
+from sqlalchemy import text, func
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
@@ -14,6 +15,7 @@ from database import engine, SessionLocal, Base, get_db
 from models import CatalogItem, ShopperSession, Outfit
 from services import gemini as gemini_service
 from services import replicate_service
+from services import s3
 
 # ---------------------------------------------------------------------------
 # Catalog seeding helper
@@ -43,6 +45,11 @@ def seed_catalog(db: Session):
                 description=item.get("description"),
                 category=item["category"],
                 gender=gender,
+                color=item.get("color"),
+                fit=item.get("fit"),
+                activity=item.get("activity"),
+                collection=item.get("collection"),
+                product_link=item.get("product_link"),
             ))
             count += 1
 
@@ -153,6 +160,29 @@ class RankOutfitsRequest(BaseModel):
     outfits: List[Dict[str, Any]]
     guardrail_results: Optional[List[Dict[str, Any]]] = None
 
+# -- Frontend-compatible endpoints --
+class AnalyzeItemRequest(BaseModel):
+    image: str  # base64-encoded image data
+    filename: Optional[str] = None
+
+class FrontendRecommendRequest(BaseModel):
+    preferences: Optional[List[str]] = None
+    closet: Optional[List[Dict[str, Any]]] = None
+    selfieDescription: Optional[str] = None
+    prompt: Optional[str] = None
+    inspirationImage: Optional[str] = None  # base64
+    styleVector: Optional[List[float]] = None
+    gender: Optional[str] = None  # "mens" or "womens"
+
+class GenerateTryOnRequest(BaseModel):
+    outfitName: Optional[str] = None
+    prompt: Optional[str] = None
+    itemsStr: Optional[str] = None
+    selfieBase64: Optional[str] = None
+
+class UploadUrlRequest(BaseModel):
+    filename: str
+
 
 # ===========================================================================
 # ENDPOINTS
@@ -165,20 +195,53 @@ class RankOutfitsRequest(BaseModel):
 def list_catalog(
     gender: Optional[str] = Query(None, description="Filter by gender: mens or womens"),
     category: Optional[str] = Query(None, description="Filter by category: Tops, Bottoms, etc."),
+    search: Optional[str] = Query(None, description="Search by name or description"),
+    color: Optional[str] = Query(None, description="Filter by color"),
+    activity: Optional[str] = Query(None, description="Filter by activity"),
+    collection: Optional[str] = Query(None, description="Filter by collection"),
+    limit: int = Query(50, ge=1, le=200, description="Max items to return"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
     db: Session = Depends(get_db),
 ):
-    """Browse the store catalog with optional filters."""
+    """Browse the store catalog with optional filters and pagination."""
     query = db.query(CatalogItem)
     if gender:
         query = query.filter(CatalogItem.gender == gender)
     if category:
         query = query.filter(CatalogItem.category == category)
+    if color:
+        query = query.filter(CatalogItem.color.ilike(f"%{color}%"))
+    if activity:
+        query = query.filter(CatalogItem.activity.ilike(f"%{activity}%"))
+    if collection:
+        query = query.filter(CatalogItem.collection.ilike(f"%{collection}%"))
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            (CatalogItem.name.ilike(search_term)) |
+            (CatalogItem.description.ilike(search_term))
+        )
 
-    items = query.all()
+    total = query.count()
+    items = query.order_by(CatalogItem.id).offset(offset).limit(limit).all()
     return {
+        "total": total,
         "count": len(items),
+        "offset": offset,
+        "limit": limit,
         "items": [_serialize_catalog_item(i) for i in items],
     }
+
+
+@app.get("/api/catalog/categories")
+def list_categories(db: Session = Depends(get_db)):
+    """Return available categories with item counts."""
+    results = (
+        db.query(CatalogItem.category, func.count(CatalogItem.id))
+        .group_by(CatalogItem.category)
+        .all()
+    )
+    return {"categories": {cat: count for cat, count in results}}
 
 
 @app.get("/api/catalog/{item_id}")
@@ -404,9 +467,268 @@ def rank_outfits(request: RankOutfitsRequest):
 
 
 # ---------------------------------------------------------------------------
-# 6. Health Check
+# 6. Frontend-Compatible Endpoints
+# ---------------------------------------------------------------------------
+
+@app.post("/api/analyze-item")
+def analyze_item(request: AnalyzeItemRequest):
+    """
+    Analyze a clothing image using Gemini vision.
+    Accepts base64-encoded image, returns structured garment metadata.
+    Compatible with the frontend's /api/analyze-item endpoint.
+    """
+    image_data = request.image
+    filename = request.filename or "garment.jpg"
+
+    # Strip data URL prefix if present
+    clean_base64 = image_data
+    if ";base64," in image_data:
+        clean_base64 = image_data.split(";base64,")[1]
+
+    try:
+        import base64 as b64
+        image_bytes = b64.b64decode(clean_base64)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid base64 image data")
+
+    if not gemini_service.init_gemini():
+        # Mock fallback
+        import random
+        categories = ["Tops", "Bottoms", "Outerwear", "Accessories"]
+        clean_name = filename.split(".")[0].replace("-", " ").replace("_", " ")
+        return {
+            "id": f"item-{uuid.uuid4().hex[:8]}",
+            "name": clean_name.title(),
+            "category": random.choice(categories),
+            "color": "Neutral Accent",
+            "pattern": "Casual Textured",
+            "vibe": "A versatile wardrobe piece styled for various casual and urban outfits.",
+            "isMock": True,
+        }
+
+    try:
+        from google.genai import types
+        image_part = types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
+
+        prompt = (
+            "Analyze this clothing photo. Identify its main characteristics and return a JSON object. "
+            "Fields:\n"
+            "1. 'name': Short descriptive name of the garment\n"
+            "2. 'category': One of: Tops, Bottoms, Outerwear, Shoes, Accessories\n"
+            "3. 'color': Dominant color or color scheme\n"
+            "4. 'pattern': Pattern or texture description\n"
+            "5. 'vibe': Short stylish assessment of its fashion vibe\n"
+            "Return only the raw JSON."
+        )
+
+        response = gemini_service.client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=[image_part, prompt],
+            config=types.GenerateContentConfig(response_mime_type="application/json"),
+        )
+        result = json.loads(response.text.strip())
+        return {
+            "id": f"item-{uuid.uuid4().hex[:8]}",
+            **result,
+            "isMock": False,
+        }
+    except Exception as e:
+        print(f"Error in analyze-item: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/recommend")
+def frontend_recommend(request: FrontendRecommendRequest, db: Session = Depends(get_db)):
+    """
+    Frontend-compatible recommendation endpoint.
+    Accepts the frontend's closet items, preferences, and prompt,
+    then returns 3 outfit recommendations.
+    """
+    # Build catalog from either provided closet items or DB catalog
+    closet_items = request.closet or []
+
+    if not closet_items:
+        # Fall back to DB catalog
+        query = db.query(CatalogItem)
+        if request.gender:
+            query = query.filter(CatalogItem.gender == request.gender)
+        db_items = query.limit(30).all()
+        closet_items = [_serialize_catalog_item(i) for i in db_items]
+
+    if not closet_items:
+        return {"recommendations": []}
+
+    preferences_str = ", ".join(request.preferences) if request.preferences else "Minimalist Casual"
+    selfie_desc = request.selfieDescription or "Average build, neutral undertone"
+    prompt = request.prompt or "A chic casual look"
+
+    # Build style vector guide
+    vector_guide = ""
+    if request.styleVector and len(request.styleVector) == 8:
+        dims = [
+            "Minimalist vs Ornamental", "Casual vs Structured",
+            "Heritage vs Futuristic", "Active vs Leisure",
+            "Vibrant vs Monochrome", "Retro vs High-Tech",
+            "Understated vs Edgy", "Organic vs Synthetic"
+        ]
+        for i, (label, val) in enumerate(zip(dims, request.styleVector)):
+            if abs(val) > 0.35:
+                side = label.split(" vs ")[0] if val > 0 else label.split(" vs ")[1]
+                vector_guide += f"  * Prefer: {side} (weight: {abs(val):.2f})\n"
+
+    # Format closet for the prompt
+    formatted_closet = "\n".join(
+        f"- [ID: {c.get('id', 'unknown')}] {c.get('name', 'Item')} "
+        f"({c.get('category', 'Unknown')}, Color: {c.get('color', 'N/A')}, "
+        f"Pattern: {c.get('pattern', 'N/A')}, Vibe: {c.get('vibe', c.get('description', 'N/A'))})"
+        for c in closet_items[:30]  # Limit to 30 items for prompt size
+    )
+
+    if not gemini_service.init_gemini():
+        # Mock fallback
+        items_for_mock = closet_items[:3]
+        return {
+            "recommendations": [
+                {
+                    "outfitName": "Classic Everyday Harmony",
+                    "rationale": f"A balanced combination inspired by your \'{prompt}\' request.",
+                    "items": [{"id": it.get("id", "mock"), "name": it.get("name", "Item"), "category": it.get("category", "Tops")} for it in items_for_mock[:2]],
+                    "onlineSourced": [{"name": "Suede Chelsea Boots", "price": "$120", "reason": "Completes the look."}],
+                    "tryOnAdvice": f"These items pair well with your body type ({selfie_desc})."
+                }
+            ]
+        }
+
+    try:
+        from google.genai import types
+
+        system_prompt = (
+            f"You are an elite personal stylist. Compose outfit recommendations from the store catalog.\n\n"
+            f"Customer Details:\n"
+            f"- Style Preferences: {preferences_str}\n"
+            f"- Body & Color profile: {selfie_desc}\n"
+            f"{('- Style DNA:\n' + vector_guide) if vector_guide else ''}"
+            f"- Occasion: {prompt}\n\n"
+            f"Available Store Inventory:\n{formatted_closet}\n\n"
+            f"Generate exactly 3 distinct outfit recommendations. Each outfit MUST use items from the store inventory above (reference their IDs). "
+            f"If you need additional items not in inventory, place them in 'onlineSourced'.\n\n"
+            f"Return a JSON object with a 'recommendations' array. Each recommendation has:\n"
+            f"- outfitName: elegant title\n"
+            f"- rationale: why these items work together\n"
+            f"- items: array of {{id, name, category}} from the inventory\n"
+            f"- onlineSourced: array of {{name, price, reason}} for supplementary items\n"
+            f"- tryOnAdvice: how this fits the customer's body type\n"
+        )
+
+        contents = []
+        if request.inspirationImage and ";base64," in request.inspirationImage:
+            clean_b64 = request.inspirationImage.split(";base64,")[1]
+            import base64 as b64
+            img_bytes = b64.b64decode(clean_b64)
+            image_part = types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg")
+            contents.append(image_part)
+            system_prompt += "\nAlso consider the attached style inspiration image."
+
+        contents.append(system_prompt)
+
+        response = gemini_service.client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=contents,
+            config=types.GenerateContentConfig(response_mime_type="application/json"),
+        )
+        result = json.loads(response.text.strip())
+        return result
+    except Exception as e:
+        print(f"Error in recommend: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/generate-try-on")
+def generate_try_on(request: GenerateTryOnRequest):
+    """
+    Generate a synthetic try-on image using Gemini image generation.
+    Compatible with the frontend's /api/generate-try-on endpoint.
+    """
+    if not gemini_service.init_gemini():
+        return {
+            "error": "API key not configured.",
+            "simulatedUrl": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800"
+        }
+
+    try:
+        from google.genai import types
+
+        appearance_traits = "A fashionable model with elegant proportions"
+
+        # If selfie provided, analyze it first
+        if request.selfieBase64 and ";base64," in request.selfieBase64:
+            try:
+                clean_b64 = request.selfieBase64.split(";base64,")[1]
+                import base64 as b64
+                img_bytes = b64.b64decode(clean_b64)
+                image_part = types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg")
+
+                analysis = gemini_service.client.models.generate_content(
+                    model="gemini-2.0-flash",
+                    contents=[
+                        image_part,
+                        "Describe this person's key visual traits (skin tones, hair, face shape, gender presentation) in 1-2 sentences for a fashion template. Focus on objective visual descriptors only."
+                    ],
+                )
+                if analysis.text:
+                    appearance_traits = analysis.text.strip()
+            except Exception as e:
+                print(f"Selfie analysis failed: {e}")
+
+        items_str = request.itemsStr or "stylish outfit"
+        outfit_name = request.outfitName or "Custom Look"
+
+        image_prompt = (
+            f"A professional full-body studio fashion photo of a person: {appearance_traits}. "
+            f"Wearing these exact items: {items_str}. "
+            f"Minimalist studio background, matching the '{outfit_name}' aesthetic. "
+            f"Atmospheric lighting, realistic fabrics, photorealistic quality."
+        )
+
+        response = gemini_service.client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=image_prompt,
+        )
+
+        # Check for inline image in response
+        if response.candidates and response.candidates[0].content and response.candidates[0].content.parts:
+            for part in response.candidates[0].content.parts:
+                if hasattr(part, 'inline_data') and part.inline_data and part.inline_data.data:
+                    import base64 as b64
+                    b64_img = b64.b64encode(part.inline_data.data).decode()
+                    return {"imageUrl": f"data:image/png;base64,{b64_img}"}
+
+        return {
+            "error": "No image generated by the model.",
+            "simulatedUrl": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=800"
+        }
+    except Exception as e:
+        print(f"Error in generate-try-on: {e}")
+        return {
+            "error": str(e),
+            "simulatedUrl": "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=800"
+        }
+
+
+@app.post("/api/upload-url")
+def get_upload_url(request: UploadUrlRequest):
+    """Generate a presigned S3 URL for direct frontend image upload."""
+    result = s3.generate_presigned_url(request.filename)
+    if result is None:
+        raise HTTPException(status_code=500, detail="Failed to generate upload URL")
+    return result
+
+
+# ---------------------------------------------------------------------------
+# 7. Health Check
 # ---------------------------------------------------------------------------
 @app.get("/")
+@app.get("/api/health")
 def health_check(db: Session = Depends(get_db)):
     """Health check with catalog stats."""
     try:
@@ -418,6 +740,7 @@ def health_check(db: Session = Depends(get_db)):
         "status": "ok",
         "service": "ClosetAI API",
         "catalog_items": catalog_count,
+        "aiAvailable": os.getenv("GEMINI_API_KEY") is not None,
         "features_enabled": {
             "gemini": os.getenv("GEMINI_API_KEY") is not None,
             "replicate": os.getenv("REPLICATE_API_TOKEN") is not None,
@@ -434,11 +757,20 @@ def _serialize_catalog_item(item: CatalogItem) -> Dict[str, Any]:
         "id": item.id,
         "name": item.name,
         "image_url": item.image_url,
+        "imageUrl": item.image_url,   # Frontend uses camelCase
         "description": item.description,
+        "vibe": item.description,      # Frontend uses 'vibe'
         "category": item.category,
         "gender": item.gender,
+        "color": item.color or (item.colors[0] if item.colors else None),
         "colors": item.colors,
+        "pattern": item.fit or "Standard",
+        "fit": item.fit,
+        "activity": item.activity,
+        "collection": item.collection,
+        "product_link": item.product_link,
         "style_tags": item.style_tags,
+        "brand": "Gymshark",
     }
 
 
