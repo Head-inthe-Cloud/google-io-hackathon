@@ -34,11 +34,13 @@ def fetch_image_bytes(image_url: str) -> bytes:
         return b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\x00\x00\x00\x21\xf9\x04\x01\x00\x00\x00\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b'
 
     try:
+        import ssl
+        context = ssl._create_unverified_context()
         req = urllib.request.Request(
             image_url,
             headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"},
         )
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, context=context) as response:
             return response.read()
     except Exception as e:
         print(f"Error fetching image from URL {image_url}: {e}")
@@ -73,7 +75,7 @@ def analyze_clothing_item(image_url: str) -> Dict[str, Any]:
         )
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             contents=[image_part, prompt],
             config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
@@ -161,7 +163,7 @@ def design_outfits_with_gemini(
         user_prompt += f"\n\nAvailable Catalog Items:\n{json.dumps(items_description)}"
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             contents=f"{system_instruction}\n\n{user_prompt}",
             config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
@@ -273,7 +275,7 @@ def verify_tryon_faithfulness(
         contents.append(prompt)
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             contents=contents,
             config=types.GenerateContentConfig(response_mime_type="application/json"),
         )

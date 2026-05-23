@@ -13,10 +13,14 @@ import json
 import uuid
 import datetime
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv, find_dotenv
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from typing import Any, Dict, List, Optional
+
+# Load environment variables from .env
+load_dotenv(find_dotenv())
 
 import store
 from models import (
@@ -929,7 +933,7 @@ def analyze_item(request: AnalyzeItemRequest):
             "Return only the raw JSON."
         )
         response = gemini_service.client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             contents=[image_part, prompt],
             config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
@@ -1026,7 +1030,7 @@ def frontend_recommend(request: FrontendRecommendRequest):
         contents.append(system_prompt)
 
         response = gemini_service.client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             contents=contents,
             config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
@@ -1055,7 +1059,7 @@ def generate_try_on(request: GenerateTryOnRequest):
                 img_bytes = b64.b64decode(clean_b64)
                 image_part = types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg")
                 analysis = gemini_service.client.models.generate_content(
-                    model="gemini-2.0-flash",
+                    model="gemini-2.5-flash",
                     contents=[image_part, "Describe this person's key visual traits for a fashion template in 1-2 sentences."],
                 )
                 if analysis.text:
@@ -1070,17 +1074,22 @@ def generate_try_on(request: GenerateTryOnRequest):
             f"Atmospheric lighting, realistic fabrics, photorealistic quality."
         )
 
-        response = gemini_service.client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=image_prompt,
+        response = gemini_service.client.models.generate_images(
+            model="imagen-3.0-generate-002",
+            prompt=image_prompt,
+            config=types.GenerateImagesConfig(
+                number_of_images=1,
+                aspect_ratio="3:4",
+                output_mime_type="image/jpeg",
+            )
         )
 
-        if response.candidates and response.candidates[0].content and response.candidates[0].content.parts:
-            for part in response.candidates[0].content.parts:
-                if hasattr(part, "inline_data") and part.inline_data and part.inline_data.data:
-                    import base64 as b64
-                    b64_img = b64.b64encode(part.inline_data.data).decode()
-                    return {"imageUrl": f"data:image/png;base64,{b64_img}"}
+        if response.generated_images:
+            img = response.generated_images[0]
+            if img.image and img.image.image_bytes:
+                import base64 as b64
+                b64_img = b64.b64encode(img.image.image_bytes).decode()
+                return {"imageUrl": f"data:image/jpeg;base64,{b64_img}"}
 
         return {
             "error": "No image generated.",
@@ -1145,3 +1154,21 @@ def health_check():
             "replicate": os.getenv("REPLICATE_API_TOKEN") is not None,
         },
     }
+
+
+# ===========================================================================
+# 11. SERVE FRONTEND STATIC FILES (for production deployment)
+# ===========================================================================
+frontend_dist = os.path.join(os.path.dirname(__file__), "../frontend/dist")
+if os.path.exists(frontend_dist):
+    from fastapi.responses import FileResponse
+    
+    # Mount built assets
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
+    
+    # Catch-all for React routing
+    @app.get("/{catchall:path}")
+    def serve_frontend(catchall: str):
+        if catchall.startswith("api") or catchall.startswith("static"):
+            raise HTTPException(status_code=404, detail="Not Found")
+        return FileResponse(os.path.join(frontend_dist, "index.html"))
