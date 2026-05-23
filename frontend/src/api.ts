@@ -222,9 +222,11 @@ export interface RecommendParams {
   preferences?: string[];
   closet?: ClosetItem[];
   selfieDescription?: string;
+  selfieImage?: string | null;
   prompt?: string;
   inspirationImage?: string | null;
   styleVector?: number[];
+  preferenceProfile?: string;
   gender?: string;
 }
 
@@ -238,6 +240,7 @@ export async function getRecommendations(params: RecommendParams): Promise<Recom
     selfieDescription: params.selfieDescription || "Average build, neutral undertone",
     prompt: params.prompt || "A stylish casual look",
     styleVector: params.styleVector || [],
+    preferenceProfile: params.preferenceProfile,
     gender: params.gender,
   };
 
@@ -267,6 +270,45 @@ export async function getRecommendations(params: RecommendParams): Promise<Recom
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: "Recommendation failed" }));
     throw new Error(err.detail || "Recommendation failed");
+  }
+  return res.json();
+}
+
+export interface PreferenceProfileParams {
+  preferences?: string[];
+  likedQuizOutfits?: Array<{
+    id: string;
+    aesthetic: string;
+    description: string;
+    imageUrl: string;
+    tags: string[];
+    gender: string;
+  }>;
+  selfieDescription?: string;
+  selfieImage?: string | null;
+  prompt?: string;
+  inspirationImage?: string | null;
+  styleVector?: number[];
+  gender?: string;
+}
+
+export interface PreferenceProfileResponse {
+  preferenceProfile: string;
+  profileTags?: string[];
+  avoid?: string[];
+  confidence?: number;
+  source?: string;
+}
+
+export async function buildPreferenceProfile(params: PreferenceProfileParams): Promise<PreferenceProfileResponse> {
+  const res = await fetch(`${API_BASE}/api/preference-profile`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Preference profile generation failed" }));
+    throw new Error(err.detail || "Preference profile generation failed");
   }
   return res.json();
 }
@@ -310,6 +352,8 @@ export interface GenerateTryOnParams {
 export interface GenerateTryOnResult {
   imageUrl?: string;
   simulatedUrl?: string;
+  advice?: string;
+  source?: string;
   error?: string;
 }
 

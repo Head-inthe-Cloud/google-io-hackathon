@@ -198,6 +198,10 @@ def query_catalog(
             i for i in results
             if ls in (i["name"] or "").lower()
             or ls in (i["description"] or "").lower()
+            or ls in (i.get("brand") or "").lower()
+            or ls in (i.get("color") or "").lower()
+            or ls in (i.get("fit") or "").lower()
+            or any(ls in str(tag).lower() for tag in (i.get("style_tags") or []))
         ]
 
     total = len(results)

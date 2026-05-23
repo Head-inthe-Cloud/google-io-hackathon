@@ -126,6 +126,17 @@ class FrontendRecommendRequest(BaseModel):
     prompt: Optional[str] = None
     inspirationImage: Optional[str] = None  # base64
     styleVector: Optional[List[float]] = None
+    preferenceProfile: Optional[str] = None
+    gender: Optional[str] = None
+
+class PreferenceProfileRequest(BaseModel):
+    preferences: Optional[List[str]] = None
+    likedQuizOutfits: Optional[List[Dict[str, Any]]] = None
+    selfieDescription: Optional[str] = None
+    selfieImage: Optional[str] = None
+    prompt: Optional[str] = None
+    inspirationImage: Optional[str] = None
+    styleVector: Optional[List[float]] = None
     gender: Optional[str] = None
 
 class GenerateTryOnRequest(BaseModel):

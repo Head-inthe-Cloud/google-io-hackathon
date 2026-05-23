@@ -45,6 +45,7 @@ from models import (
     RankOutfitsRequest,
     # Frontend-compatible
     AnalyzeItemRequest,
+    PreferenceProfileRequest,
     FrontendRecommendRequest,
     GenerateTryOnRequest,
     UploadUrlRequest,
@@ -264,6 +265,44 @@ def _build_recommendation_response(
         "intent": customer_understanding,
         "pipeline_stages": pipeline_stages,
     }
+
+
+def _style_vector_summary(style_vector: Optional[List[float]]) -> str:
+    if not style_vector or len(style_vector) != 8:
+        return ""
+    dims = [
+        "Minimalist vs Ornamental", "Casual vs Structured",
+        "Heritage vs Futuristic", "Active vs Leisure",
+        "Vibrant vs Monochrome", "Retro vs High-Tech",
+        "Understated vs Edgy", "Organic vs Synthetic",
+    ]
+    lines = []
+    for label, val in zip(dims, style_vector):
+        if abs(val) > 0.35:
+            side = label.split(" vs ")[0] if val > 0 else label.split(" vs ")[1]
+            lines.append(f"- Prefer {side.lower()} direction, weight {abs(val):.2f}")
+    return "\n".join(lines)
+
+
+def _image_part_from_input(image_value: Optional[str]):
+    if not image_value:
+        return None
+    from google.genai import types
+    import base64 as b64
+
+    try:
+        if ";base64," in image_value:
+            header, clean_b64 = image_value.split(";base64,", 1)
+            mime_type = header.split("data:", 1)[-1].split(";", 1)[0] or "image/jpeg"
+            return types.Part.from_bytes(data=b64.b64decode(clean_b64), mime_type=mime_type)
+        if image_value.startswith("http://") or image_value.startswith("https://"):
+            return types.Part.from_bytes(
+                data=gemini_service.fetch_image_bytes(image_value),
+                mime_type="image/jpeg",
+            )
+    except Exception as exc:
+        print(f"Skipping preference profile image input: {exc}")
+    return None
 
 
 def _mock_outfit_recommendations(
@@ -989,6 +1028,71 @@ def analyze_item(request: AnalyzeItemRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/api/preference-profile")
+def build_preference_profile(request: PreferenceProfileRequest):
+    """Build a durable shopper preference stack from onboarding and quiz signals."""
+    if not gemini_service.init_gemini():
+        raise HTTPException(status_code=503, detail="GEMINI_API_KEY is required to build a preference profile.")
+
+    try:
+        from google.genai import types
+
+        payload = {
+            "selected_style_preferences": request.preferences or [],
+            "liked_visual_references": request.likedQuizOutfits or [],
+            "body_and_color_notes": request.selfieDescription,
+            "current_shopping_prompt": request.prompt,
+            "style_vector_interpretation": _style_vector_summary(request.styleVector),
+            "gender_preference": request.gender,
+            "image_inputs": {
+                "selfie_image_attached": bool(request.selfieImage),
+                "inspiration_image_attached": bool(request.inspirationImage),
+                "liked_quiz_image_count": len([
+                    outfit for outfit in (request.likedQuizOutfits or [])
+                    if outfit.get("imageUrl")
+                ]),
+            },
+        }
+        prompt = (
+            "You are the Preference Profile Agent for an in-store styling assistant. "
+            "Infer a fluid shopper preference stack from the selected inputs and attached images. "
+            "Use the visual references to infer silhouette, color, formality, fabric, fit, and styling direction. "
+            "Use text inputs as context, not as hard rules.\n\n"
+            "Return JSON with:\n"
+            "- preferenceProfile: 6-10 short bullet lines written as durable shopper preferences\n"
+            "- profileTags: short normalized tags\n"
+            "- avoid: styles/items to avoid\n"
+            "- confidence: number from 0 to 1\n\n"
+            "Do not recommend products. Do not mention implementation details.\n\n"
+            f"Input JSON:\n{json.dumps(payload, ensure_ascii=False)}"
+        )
+        contents = []
+        for image in [
+            request.selfieImage,
+            request.inspirationImage,
+            *[
+                outfit.get("imageUrl")
+                for outfit in (request.likedQuizOutfits or [])[:6]
+                if outfit.get("imageUrl")
+            ],
+        ]:
+            part = _image_part_from_input(image)
+            if part:
+                contents.append(part)
+        contents.append(prompt)
+        response = gemini_service.client.models.generate_content(
+            model=gemini_service.model_name(),
+            contents=contents,
+            config=types.GenerateContentConfig(response_mime_type="application/json"),
+        )
+        result = json.loads(response.text.strip())
+        result.setdefault("source", "gemini")
+        return result
+    except Exception as e:
+        print(f"Error building preference profile: {e}")
+        raise HTTPException(status_code=502, detail=f"Preference profile generation failed: {e}") from e
+
+
 @app.post("/api/recommend")
 def frontend_recommend(request: FrontendRecommendRequest):
     """
@@ -1008,6 +1112,12 @@ def frontend_recommend(request: FrontendRecommendRequest):
     preferences_str = ", ".join(request.preferences) if request.preferences else "Casual"
     selfie_desc = request.selfieDescription or "Average build"
     prompt = request.prompt or "A stylish look"
+    preference_profile = request.preferenceProfile or ""
+    preference_profile_section = (
+        f"- Preference Stack Profile:\n{preference_profile}\n"
+        if preference_profile
+        else ""
+    )
 
     vector_guide = ""
     if request.styleVector and len(request.styleVector) == 8:
@@ -1053,6 +1163,7 @@ def frontend_recommend(request: FrontendRecommendRequest):
         system_prompt = (
             f"You are an elite personal stylist. Compose outfit recommendations from the store catalog.\n\n"
             f"Customer Details:\n"
+            f"{preference_profile_section}"
             f"- Style Preferences: {preferences_str}\n"
             f"- Body & Color profile: {selfie_desc}\n"
             f"{style_dna_section}"
@@ -1088,12 +1199,9 @@ def frontend_recommend(request: FrontendRecommendRequest):
 
 @app.post("/api/generate-try-on")
 def generate_try_on(request: GenerateTryOnRequest):
-    """Generate a synthetic try-on image using Gemini image generation."""
+    """Generate try-on visualization or a Gemini-grounded silhouette preview."""
     if not gemini_service.init_gemini():
-        return {
-            "error": "API key not configured.",
-            "simulatedUrl": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800",
-        }
+        raise HTTPException(status_code=503, detail="GEMINI_API_KEY is required for try-on generation.")
     try:
         from google.genai import types
 
@@ -1113,40 +1221,63 @@ def generate_try_on(request: GenerateTryOnRequest):
             except Exception as e:
                 print(f"Selfie analysis failed: {e}")
 
-        image_prompt = (
-            f"A professional full-body studio fashion photo of a person: {appearance}. "
+        tryon_prompt = (
+            "Create a photorealistic virtual try-on preview for the provided shopper image and outfit. "
+            f"Preserve the shopper identity and body proportions. Person: {appearance}. "
             f"Wearing: {request.itemsStr or 'stylish outfit'}. "
-            f"Minimalist studio background, '{request.outfitName or 'Custom Look'}' aesthetic. "
-            f"Atmospheric lighting, realistic fabrics, photorealistic quality."
+            f"Outfit name: {request.outfitName or 'Custom Look'}. "
+            "Return an image if this model supports image output."
         )
 
-        response = gemini_service.client.models.generate_images(
-            model="imagen-3.0-generate-002",
-            prompt=image_prompt,
-            config=types.GenerateImagesConfig(
-                number_of_images=1,
-                aspect_ratio="3:4",
-                output_mime_type="image/jpeg",
+        advice_response = gemini_service.client.models.generate_content(
+            model=gemini_service.model_name(),
+            contents=(
+                "Give concise silhouette and try-on advice for this outfit. "
+                "Mention fit, proportions, layering, and any caution. "
+                f"Outfit: {request.outfitName or 'Custom Look'}\n"
+                f"Items: {request.itemsStr or 'not specified'}\n"
+                f"Shopper profile: {appearance}"
+            ),
+        )
+        advice = advice_response.text.strip() if advice_response.text else None
+
+        contents = []
+        selfie_part = _image_part_from_input(request.selfieBase64)
+        if selfie_part:
+            contents.append(selfie_part)
+        contents.append(tryon_prompt)
+
+        try:
+            image_response = gemini_service.client.models.generate_content(
+                model=os.getenv("TRYON_MODEL") or gemini_service.model_name(),
+                contents=contents,
+                config=types.GenerateContentConfig(response_modalities=["TEXT", "IMAGE"]),
             )
-        )
 
-        if response.generated_images:
-            img = response.generated_images[0]
-            if img.image and img.image.image_bytes:
-                import base64 as b64
-                b64_img = b64.b64encode(img.image.image_bytes).decode()
-                return {"imageUrl": f"data:image/jpeg;base64,{b64_img}"}
+            for candidate in image_response.candidates or []:
+                for part in candidate.content.parts:
+                    if part.inline_data and part.inline_data.data:
+                        import base64 as b64
+                        mime_type = part.inline_data.mime_type or "image/png"
+                        b64_img = b64.b64encode(part.inline_data.data).decode()
+                        return {
+                            "imageUrl": f"data:{mime_type};base64,{b64_img}",
+                            "advice": advice,
+                            "source": "gemini_image",
+                        }
+        except Exception as e:
+            print(f"Try-on image generation unavailable for current Gemini model: {e}")
 
-        return {
-            "error": "No image generated.",
-            "simulatedUrl": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=800",
-        }
+        if request.selfieBase64:
+            return {
+                "imageUrl": request.selfieBase64,
+                "advice": advice,
+                "source": "input_portrait_with_gemini_advice",
+            }
+        return {"advice": advice, "source": "gemini_advice"}
     except Exception as e:
         print(f"Error in generate-try-on: {e}")
-        return {
-            "error": str(e),
-            "simulatedUrl": "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=800",
-        }
+        raise HTTPException(status_code=502, detail=f"Try-on generation failed: {e}") from e
 
 
 @app.post("/api/upload-url")

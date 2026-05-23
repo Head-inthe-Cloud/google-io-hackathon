@@ -60,6 +60,22 @@ const DIMENSION_LABELS = [
   "Organic vs Synthetic"
 ];
 
+const DEFAULT_SELECTED_STYLE_IDS = ["minimalist", "preppy"];
+
+const AESTHETIC_ALIASES: Record<string, string> = {
+  "Minimalist Casual": "Minimalist",
+  "Streetwear Grunge": "Streetwear",
+  "Classic Prep": "Classic Prep / Academic",
+  "Cottagecore Romantic": "Cottagecore / Romantic",
+  "Athleisure Active": "Athleisure",
+  "Smart Executive": "Business Casual",
+  "Bohemian Artisanal": "Bohemian / Free Spirit",
+  "Gorpcore Techwear": "Gorpcore",
+  "Smart Tailored": "Business Casual",
+  "Retro Vintage": "Y2K Retro",
+  "Modern Athleisure": "Athleisure",
+};
+
 export default function App() {
   // Navigation Tabs
   const [activeTab, setActiveTab] = useState<"discover" | "closet" | "liked" | "designdoc">("discover");
@@ -68,7 +84,10 @@ export default function App() {
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(() => {
     return localStorage.getItem("closet_onboarding") === "true";
   });
-  const [selectedStylesOnboard, setSelectedStylesOnboard] = useState<string[]>(["minimalist", "preppy"]);
+  const [selectedStylesOnboard, setSelectedStylesOnboard] = useState<string[]>(() => {
+    const saved = localStorage.getItem("user_selected_style_ids");
+    return saved ? JSON.parse(saved) : DEFAULT_SELECTED_STYLE_IDS;
+  });
   const [selfieTraitsInput, setSelfieTraitsInput] = useState<string>("Slightly warm undertones, standard slim frame, light chestnut hair.");
 
   // Style Preference Quiz states
@@ -119,6 +138,9 @@ export default function App() {
   const [recsQueue, setRecsQueue] = useState<OutfitRecommendation[]>([]);
   const [queueIndex, setQueueIndex] = useState<number>(0);
   const [likedRecFeedback, setLikedRecFeedback] = useState<boolean>(false);
+  const [preferenceProfile, setPreferenceProfile] = useState<string>(() => {
+    return localStorage.getItem("user_preference_profile") || "";
+  });
 
   // Clothing item analysis state
   const [isAnalyzingItem, setIsAnalyzingItem] = useState<boolean>(false);
@@ -128,6 +150,10 @@ export default function App() {
   const [storeGenderFilter, setStoreGenderFilter] = useState<"all" | "male" | "female">("all");
   const [storeCategoryFilter, setStoreCategoryFilter] = useState<"all" | GarmentCategory>("all");
   const [storeSearchQuery, setStoreSearchQuery] = useState<string>("");
+  const [stockroomItems, setStockroomItems] = useState<ClosetItem[]>([]);
+  const [stockroomTotal, setStockroomTotal] = useState<number>(0);
+  const [isStockroomLoading, setIsStockroomLoading] = useState<boolean>(false);
+  const [stockroomError, setStockroomError] = useState<string | null>(null);
 
   // Advanced Visual Try-on simulation state
   const [isGeneratingVisual, setIsGeneratingVisual] = useState<boolean>(false);
@@ -192,6 +218,14 @@ export default function App() {
     localStorage.setItem("user_liked_outfits", JSON.stringify(likedOutfits));
   }, [likedOutfits]);
 
+  useEffect(() => {
+    localStorage.setItem("user_selected_style_ids", JSON.stringify(selectedStylesOnboard));
+  }, [selectedStylesOnboard]);
+
+  useEffect(() => {
+    localStorage.setItem("user_preference_profile", preferenceProfile);
+  }, [preferenceProfile]);
+
   // Save Style Preference Quiz states
   useEffect(() => {
     localStorage.setItem("user_liked_quiz_outfits", JSON.stringify(likedQuizOutfits));
@@ -200,6 +234,39 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("user_style_vector", JSON.stringify(userStyleVector));
   }, [userStyleVector]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadStockroom() {
+      if (!backendConnected) return;
+      setIsStockroomLoading(true);
+      setStockroomError(null);
+      try {
+        const gender =
+          storeGenderFilter === "male"
+            ? "mens"
+            : storeGenderFilter === "female"
+              ? "womens"
+              : undefined;
+        const data = await api.fetchCatalog({
+          gender,
+          category: storeCategoryFilter === "all" ? undefined : storeCategoryFilter,
+          search: storeSearchQuery.trim() || undefined,
+          limit: 120,
+        });
+        if (cancelled) return;
+        setStockroomTotal(data.total);
+        setStockroomItems(data.items.map(api.catalogItemToClosetItem));
+      } catch (err: any) {
+        if (cancelled) return;
+        setStockroomError(err.message || String(err));
+      } finally {
+        if (!cancelled) setIsStockroomLoading(false);
+      }
+    }
+    loadStockroom();
+    return () => { cancelled = true; };
+  }, [backendConnected, storeGenderFilter, storeCategoryFilter, storeSearchQuery]);
 
   // Toggle quiz selections & calculate live vector values using the factors matrix
   const handleToggleQuizOutfit = (id: string) => {
@@ -219,8 +286,9 @@ export default function App() {
     const sumVector = Array(8).fill(0);
     likedIds.forEach(id => {
       const outfit = STYLE_QUIZ_OUTFITS.find(o => o.id === id);
-      if (outfit && AESTHETIC_FACTORS[outfit.aesthetic]) {
-        const factors = AESTHETIC_FACTORS[outfit.aesthetic];
+      const factorKey = outfit ? AESTHETIC_ALIASES[outfit.aesthetic] || outfit.aesthetic : "";
+      if (factorKey && AESTHETIC_FACTORS[factorKey]) {
+        const factors = AESTHETIC_FACTORS[factorKey];
         for (let i = 0; i < 8; i++) {
           sumVector[i] += factors[i];
         }
@@ -404,13 +472,27 @@ export default function App() {
     const activePreferences = STYLE_PREF_CHOICES.filter(p => selectedStylesOnboard.includes(p.id)).map(p => p.name);
 
     try {
+      const profile = await api.buildPreferenceProfile({
+        preferences: activePreferences,
+        likedQuizOutfits: STYLE_QUIZ_OUTFITS.filter((outfit) => likedQuizOutfits.includes(outfit.id)),
+        selfieDescription,
+        selfieImage,
+        prompt: userPrompt,
+        inspirationImage,
+        styleVector: userStyleVector,
+        gender: quizGender,
+      });
+      setPreferenceProfile(profile.preferenceProfile);
+
       const data = await api.getRecommendations({
         preferences: activePreferences,
         closet: closetItems,
         selfieDescription: selfieDescription,
+        selfieImage,
         prompt: userPrompt,
         inspirationImage: inspirationImage,
         styleVector: userStyleVector,
+        preferenceProfile: profile.preferenceProfile,
         gender: quizGender === "male" ? "mens" : "womens",
       });
 
@@ -496,6 +578,11 @@ export default function App() {
         if (data.error) {
           setVisualError(`Simulation active: ${data.error}`);
         }
+      } else if (data.advice) {
+        if (selfieImage) {
+          setGeneratedVisualUrl(selfieImage);
+        }
+        setVisualError(data.advice);
       } else {
         throw new Error("No image URL returned by the visualization service");
       }
@@ -722,7 +809,7 @@ export default function App() {
                       onClick={() => {
                         // Completely skip onboarding and jump straight into the application
                         if (selectedStylesOnboard.length === 0) {
-                          setSelectedStylesOnboard(["minimalist", "preppy"]);
+                          setSelectedStylesOnboard(DEFAULT_SELECTED_STYLE_IDS);
                         }
                         handleCompleteOnboarding();
                       }}
@@ -970,7 +1057,7 @@ export default function App() {
                       onClick={() => {
                         // Skip Step 2 fine-tuning, directly complete using Step 1 choices
                         if (selectedStylesOnboard.length === 0) {
-                          setSelectedStylesOnboard(["minimalist", "preppy"]);
+                          setSelectedStylesOnboard(DEFAULT_SELECTED_STYLE_IDS);
                         }
                         handleCompleteOnboarding();
                       }}
@@ -982,7 +1069,7 @@ export default function App() {
                       onClick={() => {
                         // Apply reasonable defaults if non-selected
                         if (selectedStylesOnboard.length === 0) {
-                          setSelectedStylesOnboard(["minimalist", "preppy"]);
+                          setSelectedStylesOnboard(DEFAULT_SELECTED_STYLE_IDS);
                         }
                         handleCompleteOnboarding();
                       }}
@@ -1659,14 +1746,16 @@ export default function App() {
               <div className="flex items-center space-x-6 text-xs bg-neutral-900/40 border border-neutral-80 w-full md:w-auto p-4 rounded-xl">
                 <div>
                   <span className="block text-neutral-500 font-mono uppercase text-[9px]">TOTAL AVAILABLE STOCK</span>
-                  <span className="text-lg text-white font-medium">{closetItems.length} styles</span>
-                  {catalogTotal > closetItems.length && (
-                    <span className="block text-neutral-500 font-mono text-[8px]">{catalogTotal} in full catalog</span>
+                  <span className="text-lg text-white font-medium">{stockroomTotal || catalogTotal} styles</span>
+                  {stockroomItems.length > 0 && stockroomTotal > stockroomItems.length && (
+                    <span className="block text-neutral-500 font-mono text-[8px]">{stockroomItems.length} currently shown</span>
                   )}
                 </div>
                 <div>
                   <span className="block text-neutral-500 font-mono uppercase text-[9px]">TARGET AESTHETICS</span>
-                  <span className="text-sm text-amber-200 capitalize font-medium">{selectedStylesOnboard.join(", ")}</span>
+                  <span className="text-sm text-amber-200 font-medium">
+                    {STYLE_PREF_CHOICES.filter(p => selectedStylesOnboard.includes(p.id)).map(p => p.name).join(", ")}
+                  </span>
                 </div>
               </div>
             </div>
@@ -1964,31 +2053,18 @@ export default function App() {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   
                   {(() => {
-                    const filteredStoreItems = closetItems.filter((item) => {
-                      // Check gender
-                      if (storeGenderFilter !== "all") {
-                        if (item.gender && item.gender !== storeGenderFilter) {
-                          return false;
-                        }
-                      }
-                      // Check category
-                      if (storeCategoryFilter !== "all" && item.category !== storeCategoryFilter) {
-                        return false;
-                      }
-                      // Check search text (name, brand, color, vibe, pattern)
-                      if (storeSearchQuery.trim() !== "") {
-                        const q = storeSearchQuery.toLowerCase();
-                        const nameMatch = item.name.toLowerCase().includes(q);
-                        const brandMatch = item.brand?.toLowerCase().includes(q);
-                        const colorMatch = item.color.toLowerCase().includes(q);
-                        const patternMatch = item.pattern.toLowerCase().includes(q);
-                        const vibeMatch = item.vibe.toLowerCase().includes(q);
-                        if (!nameMatch && !brandMatch && !colorMatch && !patternMatch && !vibeMatch) {
-                          return false;
-                        }
-                      }
-                      return true;
-                    });
+                    const filteredStoreItems = stockroomItems.length > 0 ? stockroomItems : closetItems;
+
+                    if (isStockroomLoading) {
+                      return (
+                        <div className="col-span-full border border-neutral-850 border-dashed rounded-3xl p-16 text-center flex flex-col items-center justify-center min-h-[400px]">
+                          <div className="w-8 h-8 rounded-full border-2 border-amber-200 border-t-transparent animate-spin mb-3" />
+                          <span className="text-xs font-mono uppercase tracking-widest text-neutral-400">
+                            Loading catalog matches
+                          </span>
+                        </div>
+                      );
+                    }
 
                     if (filteredStoreItems.length === 0) {
                       return (
@@ -1998,7 +2074,7 @@ export default function App() {
                             No Matching Catalog Styles
                           </span>
                           <span className="text-xs text-neutral-600 max-w-sm">
-                            Try broadening your search text or switching department filters (All stock vs Men's or Women's).
+                            {stockroomError || "Try broadening your search text or switching department filters (All stock vs Men's or Women's)."}
                           </span>
                         </div>
                       );
