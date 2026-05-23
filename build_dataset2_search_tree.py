@@ -4,8 +4,8 @@ import json
 from collections import Counter
 
 
-DEFAULT_INPUT = "dataset2_products.json"
-DEFAULT_OUTPUT = "dataset2_search_tree.json"
+DEFAULT_INPUT = "data/dataset2_products.json"
+DEFAULT_OUTPUT = "data/dataset2_search_tree.json"
 NAVIGATION_FIELDS = ["store", "brand", "gender", "department", "category", "product_type"]
 FACET_FIELDS = [
     "store",

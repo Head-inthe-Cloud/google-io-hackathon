@@ -31,7 +31,7 @@ STORES = [
         "products_endpoint": "https://www.everlane.com/products.json",
     },
 ]
-DEFAULT_OUTPUT = "dataset2_products.json"
+DEFAULT_OUTPUT = "data/dataset2_products.json"
 
 
 def clean_text(value):
