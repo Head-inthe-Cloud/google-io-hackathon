@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Premium Gemini Cool Light Design System */
+  --color-neutral-950: #F4F6FA; /* Main light signature Gemini azure-tint background */
+  --color-neutral-900: #FFFFFF; /* High-contrast white layers for gorgeous cards */
+  --color-neutral-850: #E9EFF6; /* Soft blue-gray for search input wells, tabs, and buttons */
+  --color-neutral-800: #E1E8F0; /* Thin precise slate dividers */
+  --color-neutral-750: #D0DBE7; /* Secondary borders */
+  --color-neutral-700: #B9C9D9; /* Pronounced controls */
+
+  --color-neutral-600: #64748B; /* Secondary items, icons, and labels */
+  --color-neutral-500: #475569; /* Process rules and guidelines text */
+  --color-neutral-450: #334155; /* Secondary legible text copies */
+  --color-neutral-400: #1E293B; /* Comfort reading body copy */
+  --color-neutral-300: #1E293B; /* Standard paragraphs */
+  --color-neutral-200: #0F172A; /* Clean luxury title dark slate */
+  --color-neutral-100: #020617; /* High emphasis pitch-black */
+
+  --color-white: #0F172A;        /* Maps the text-white styling seamlessly to gorgeous rich dark-slate titles */
+  --color-amber-100: #E8EEFF;    /* Selection highlighting ink */
+  --color-amber-200: #4F46E5;    /* Vibrant Indigo representing main brand highlights */
+  --color-amber-300: #7C3AED;    /* Royal Violet hover and focus accents */
+  --color-amber-400: #9333EA;    /* High-vibrancy Magenta-Violet for AI highlights & indicators */
+
+  /* Customize general background glow effects to emulate the Gemini AI aura */
+  --color-indigo-100: #E0E7FF;
+  --color-indigo-200: #C7D2FE;
+  --color-purple-200: #E9D5FF;
+}
+
+/* Custom Gemini-style multi-color gradient border and text glowing utilities */
+.gemini-gradient-text {
+  background: linear-gradient(135deg, #4285F4 0%, #9B51E0 50%, #E83E8C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gemini-gradient-bg {
+  background: linear-gradient(135deg, #4285F4 0%, #9B51E0 50%, #EC4899 100%);
+}
+
+.gemini-glow {
+  box-shadow: 0 0 30px rgba(124, 77, 255, 0.12);
+}
+
+.gemini-card-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.gemini-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -10px rgba(66, 133, 244, 0.15), 0 0 0 1px rgba(124, 77, 255, 0.1);
+}

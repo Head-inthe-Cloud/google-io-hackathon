@@ -1,5 +1,6 @@
-./backend/__pycache__/
-
 __pycache__/
 .env
 *.env
+*.pyc
+backend/.env
+tests/fixtures/outputs/

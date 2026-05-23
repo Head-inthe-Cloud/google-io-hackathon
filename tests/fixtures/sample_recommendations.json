@@ -1,0 +1,53 @@
+{
+  "description": "Pre-built outfit recommendations referencing sample_catalog.json item IDs. Use to test try-on and guardrail agents without running retrieval first.",
+  "recommendations": [
+    {
+      "recommendation_id": "rec_m_gym_001",
+      "gender": "men",
+      "items": ["cat_m_top_001", "cat_m_bottom_001"],
+      "reason": "Classic gym look: Crest tee with Arrival training shorts. Simple two-piece for baseline try-on.",
+      "style_tags": ["gym", "training", "minimal"],
+      "scenario": "Happy path — single top + shorts"
+    },
+    {
+      "recommendation_id": "rec_m_street_002",
+      "gender": "men",
+      "items": ["cat_m_top_004", "cat_m_bottom_002", "cat_m_outer_001"],
+      "reason": "Rest-day street look: long sleeve, joggers, and hoodie for layering.",
+      "style_tags": ["casual", "streetwear", "layered"],
+      "scenario": "Three-piece outfit — tests multi-garment try-on"
+    },
+    {
+      "recommendation_id": "rec_m_pattern_003",
+      "gender": "men",
+      "items": ["cat_m_top_002", "cat_m_bottom_001"],
+      "reason": "Geo seamless tee adds texture; pair with solid black shorts for contrast.",
+      "style_tags": ["training", "seamless", "contrast"],
+      "scenario": "Patterned top — guardrail color/texture fidelity"
+    },
+    {
+      "recommendation_id": "rec_w_vital_001",
+      "gender": "women",
+      "items": ["cat_w_top_001", "cat_w_bottom_001"],
+      "reason": "Matching Vital crop top and leggings in black marl. Best-selling coordinated set.",
+      "style_tags": ["training", "seamless", "coordinated"],
+      "scenario": "Women's happy path — matching set"
+    },
+    {
+      "recommendation_id": "rec_w_adapt_002",
+      "gender": "women",
+      "items": ["cat_w_top_003", "cat_w_bottom_002"],
+      "reason": "Adapt fleck long-sleeve crop with matching fleck leggings. Multi-tone pattern stress test.",
+      "style_tags": ["seamless", "fleck", "coordinated"],
+      "scenario": "Pattern + color fidelity — guardrail stress test"
+    },
+    {
+      "recommendation_id": "rec_w_layered_003",
+      "gender": "women",
+      "items": ["cat_w_bra_001", "cat_w_bottom_004", "cat_w_outer_001"],
+      "reason": "Sports bra base with Legacy leggings and Vital zip pullover for a layered training look.",
+      "style_tags": ["training", "layered", "high support"],
+      "scenario": "Sports bra + outerwear — complex garment types"
+    }
+  ]
+}

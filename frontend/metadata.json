@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Remix: Macy\u0027s Personal Fitting Advisor",
+  "description": "An AI-powered store personal fitting advisor for customers, stocked with Macy\u0027s active available collections and style choices, offering smart custom pairings, try-ons, and style suggestions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
