@@ -91,10 +91,7 @@ export default function App() {
   const [onboardingStep, setOnboardingStep] = useState<number>(1);
 
   // General state
-  const [closetItems, setClosetItems] = useState<ClosetItem[]>(() => {
-    const saved = localStorage.getItem("closet_items");
-    return saved ? JSON.parse(saved) : INITIAL_CLOSET_ITEMS;
-  });
+  const [closetItems, setClosetItems] = useState<ClosetItem[]>([]);
 
   const [selfieImage, setSelfieImage] = useState<string | null>(() => {
     return localStorage.getItem("user_selfie") || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600";
@@ -139,10 +136,6 @@ export default function App() {
 
   // Save states to LocalStorage
   useEffect(() => {
-    localStorage.setItem("closet_items", JSON.stringify(closetItems));
-  }, [closetItems]);
-
-  useEffect(() => {
     if (selfieImage) localStorage.setItem("user_selfie", selfieImage);
   }, [selfieImage]);
 
@@ -163,33 +156,34 @@ export default function App() {
     localStorage.setItem("user_style_vector", JSON.stringify(userStyleVector));
   }, [userStyleVector]);
 
-  // Load catalog from backend on mount
+  // Load catalog from backend on mount (and when gender changes)
   useEffect(() => {
     let cancelled = false;
     async function loadCatalog() {
       setIsCatalogLoading(true);
       setCatalogError(null);
       try {
-        // First check if backend is up
-        const healthRes = await fetch("/api/").then(r => r.json()).catch(() => null);
+        // Check if backend is up
+        const healthRes = await fetch("/api/health").then(r => r.json()).catch(() => null);
         if (!healthRes || healthRes.status !== "ok") {
           console.warn("Backend not reachable, using local fallback data.");
           setBackendConnected(false);
+          // Fall back to hardcoded mock items only when backend is down
+          setClosetItems(prev => prev.length === 0 ? INITIAL_CLOSET_ITEMS : prev);
           setIsCatalogLoading(false);
           return;
         }
         setBackendConnected(true);
 
-        // Load a reasonable subset of catalog items
+        // Load catalog items from backend
         const genderPref = quizGender === "male" ? "mens" : "womens";
         const data = await api.fetchCatalog({ gender: genderPref, limit: 50 });
         if (cancelled) return;
         setCatalogTotal(data.total);
 
-        // Convert backend items to frontend format and merge with existing
+        // Backend items replace all non-custom items
         const backendItems = data.items.map(api.catalogItemToClosetItem);
         setClosetItems(prev => {
-          // Keep any custom items the user added, replace catalog items
           const customItems = prev.filter(i => i.isCustom);
           return [...customItems, ...backendItems];
         });
@@ -197,6 +191,8 @@ export default function App() {
         console.warn("Failed to load catalog from backend:", err.message);
         setBackendConnected(false);
         setCatalogError(err.message);
+        // Fall back to hardcoded mock items
+        setClosetItems(prev => prev.length === 0 ? INITIAL_CLOSET_ITEMS : prev);
       } finally {
         if (!cancelled) setIsCatalogLoading(false);
       }

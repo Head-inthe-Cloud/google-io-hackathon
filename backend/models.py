@@ -1,61 +1,138 @@
-import datetime
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, JSON, ForeignKey
-from pgvector.sqlalchemy import Vector
-from database import Base
+"""
+Pydantic request/response schemas for the ClosetAI API.
+
+No SQLAlchemy — all data lives in the in-memory store (store.py).
+Schemas follow the contracts defined in docs/AGENT_WORKFLOW.md,
+docs/backend_api_surface.md, and docs/db_handoff_tryon_guardrail_agents.md.
+"""
+
+from __future__ import annotations
+from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Optional
 
 
-class CatalogItem(Base):
-    __tablename__ = "catalog_items"
+# ===== Catalog ================================================================
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    image_url = Column(String, nullable=False)
-    description = Column(String, nullable=True)
-    category = Column(String, nullable=False, index=True)  # Tops, Bottoms, Outerwear, Sports Bras, Accessories, One-Piece
-    gender = Column(String, nullable=False, index=True)     # "mens" or "womens"
+class CatalogIngestRequest(BaseModel):
+    image_url: str
+    source_url: Optional[str] = None
+    sku: Optional[str] = None
+    name: Optional[str] = None
+    price: Optional[float] = None
 
-    # Extra metadata from product feed
-    color = Column(String, nullable=True)        # e.g. "black"
-    fit = Column(String, nullable=True)          # e.g. "regular fit"
-    activity = Column(String, nullable=True)     # e.g. "conditioning"
-    collection = Column(String, nullable=True)   # e.g. "collective"
-    product_link = Column(String, nullable=True)
-
-    # AI-enriched fields (populated by agent later)
-    colors = Column(JSON, nullable=True)        # e.g. ["black"]
-    style_tags = Column(JSON, nullable=True)    # e.g. ["casual", "streetwear"]
-    style_vector = Column(Vector(768), nullable=True)
-
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+class CatalogIngestBatchRequest(BaseModel):
+    items: List[CatalogIngestRequest]
 
 
-class ShopperSession(Base):
-    __tablename__ = "shopper_sessions"
+# ===== Sessions ===============================================================
 
-    id = Column(Integer, primary_key=True, index=True)
-    session_token = Column(String, unique=True, index=True, nullable=False)
-    selfie_url = Column(String, nullable=True)
-    gender_preference = Column(String, nullable=True)   # "mens", "womens", or null for both
-    favorite_colors = Column(JSON, nullable=True)
-    disliked_styles = Column(JSON, nullable=True)
-    occasion = Column(String, nullable=True)            # "gym", "casual", "date night"
-    notes = Column(String, nullable=True)               # free-form style input
+class CreateSessionRequest(BaseModel):
+    worker_id: Optional[str] = None
+    store_id: Optional[str] = None
+    selfie_url: Optional[str] = None
+    gender_preference: Optional[str] = None
+    favorite_colors: Optional[List[str]] = None
+    disliked_styles: Optional[List[str]] = None
+    occasion: Optional[str] = None
+    notes: Optional[str] = None
 
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+class UpdateSessionRequest(BaseModel):
+    selfie_url: Optional[str] = None
+    gender_preference: Optional[str] = None
+    favorite_colors: Optional[List[str]] = None
+    disliked_styles: Optional[List[str]] = None
+    occasion: Optional[str] = None
+    notes: Optional[str] = None
 
 
-class Outfit(Base):
-    __tablename__ = "outfits"
+# ===== Intake & Refinement (core agent loop) =================================
 
-    id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(Integer, ForeignKey("shopper_sessions.id"), nullable=True)
-    outfit_id_label = Column(String, nullable=True)     # "rec_001"
-    item_ids = Column(JSON, nullable=False)             # list of CatalogItem IDs
-    reason = Column(String, nullable=True)
-    style_tags = Column(JSON, nullable=True)
-    styling_tip = Column(String, nullable=True)
-    confidence_score = Column(Float, nullable=True)
-    ranking = Column(Integer, nullable=True)
-    total_price = Column(Float, nullable=True)
+class IntakeRequest(BaseModel):
+    """POST /api/sessions/{session_id}/intake"""
+    prompt: str
+    reference_image_url: Optional[str] = None
+    customer_photo_url: Optional[str] = None
 
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+class RefineRequest(BaseModel):
+    """POST /api/sessions/{session_id}/refine"""
+    feedback: str
+    feedback_type: str = "text"  # "text" | "chip"
+    rejected_recommendation_ids: Optional[List[str]] = None
+
+class SessionTryOnRequest(BaseModel):
+    """POST /api/sessions/{session_id}/try-on"""
+    recommendation_id: str
+    customer_photo_url: Optional[str] = None
+
+class CloseSessionRequest(BaseModel):
+    """PATCH /api/sessions/{session_id}/close"""
+    outcome: Optional[str] = None  # "tried_on" | "purchased" | "left"
+    notes: Optional[str] = None
+
+
+# ===== Recommendations (session-scoped) =======================================
+
+class RecommendRequest(BaseModel):
+    prompt: str
+    image_prompt_url: Optional[str] = None
+    partner_image_url: Optional[str] = None
+    occasion: Optional[str] = None
+    weather_context: Optional[str] = None
+
+
+# ===== Virtual Try-On =========================================================
+
+class VirtualTryOnRequest(BaseModel):
+    selfie_url: str
+    garment_url: str
+
+class BatchTryOnOutfit(BaseModel):
+    outfit_id: str
+    garment_urls: List[str]
+
+class BatchTryOnRequest(BaseModel):
+    session_token: str
+    selfie_url: str
+    outfits: List[BatchTryOnOutfit]
+
+
+# ===== Guardrail ==============================================================
+
+class GuardrailCheckRequest(BaseModel):
+    outfit_id: str
+    tryon_image_url: str
+    selfie_url: str
+    garment_urls: List[str]
+
+
+# ===== Rank Outfits ===========================================================
+
+class RankOutfitsRequest(BaseModel):
+    session_token: str
+    outfits: List[Dict[str, Any]]
+    guardrail_results: Optional[List[Dict[str, Any]]] = None
+
+
+# ===== Frontend-compatible endpoints ==========================================
+
+class AnalyzeItemRequest(BaseModel):
+    image: str  # base64-encoded image data
+    filename: Optional[str] = None
+
+class FrontendRecommendRequest(BaseModel):
+    preferences: Optional[List[str]] = None
+    closet: Optional[List[Dict[str, Any]]] = None
+    selfieDescription: Optional[str] = None
+    prompt: Optional[str] = None
+    inspirationImage: Optional[str] = None  # base64
+    styleVector: Optional[List[float]] = None
+    gender: Optional[str] = None
+
+class GenerateTryOnRequest(BaseModel):
+    outfitName: Optional[str] = None
+    prompt: Optional[str] = None
+    itemsStr: Optional[str] = None
+    selfieBase64: Optional[str] = None
+
+class UploadUrlRequest(BaseModel):
+    filename: str
