@@ -14,6 +14,13 @@ class CatalogItem(Base):
     category = Column(String, nullable=False, index=True)  # Tops, Bottoms, Outerwear, Sports Bras, Accessories, One-Piece
     gender = Column(String, nullable=False, index=True)     # "mens" or "womens"
 
+    # Extra metadata from product feed
+    color = Column(String, nullable=True)        # e.g. "black"
+    fit = Column(String, nullable=True)          # e.g. "regular fit"
+    activity = Column(String, nullable=True)     # e.g. "conditioning"
+    collection = Column(String, nullable=True)   # e.g. "collective"
+    product_link = Column(String, nullable=True)
+
     # AI-enriched fields (populated by agent later)
     colors = Column(JSON, nullable=True)        # e.g. ["black"]
     style_tags = Column(JSON, nullable=True)    # e.g. ["casual", "streetwear"]
