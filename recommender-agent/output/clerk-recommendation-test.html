@@ -152,6 +152,7 @@
     const policyEl = document.getElementById("preference-policy");
     const recommendationEl = document.getElementById("recommendation");
     const traceEl = document.getElementById("trace");
+    const branchGoals = new Map();
 
     function renderRequest(request) {
       queryEl.textContent = request.query;
@@ -219,12 +220,20 @@
     }
 
     function traceFromEvent(eventName, data) {
+      if (eventName === "started") {
+        return "Recommendation request started";
+      }
       if (eventName === "context_compiler.completed") {
         const context = data.shopping_context || {};
         return `Context compiled: ${context.goal || "shopping goal created"}`;
       }
+      if (eventName === "branch_retrieval.started") {
+        if (data.branch_id && data.goal) branchGoals.set(data.branch_id, data.goal);
+        return null;
+      }
       if (eventName === "branch_retrieval.completed") {
-        return `Search branch ${data.branch_id}: ${data.candidate_count} candidates found`;
+        const branchName = branchGoals.get(data.branch_id) || "Search branch";
+        return `${branchName}: ${data.candidate_count} candidates found`;
       }
       if (eventName === "set_builder.completed") {
         return `Set builder: ${data.proposed_product_set_count} product sets proposed`;
@@ -265,6 +274,7 @@
       renderRequest(request);
       recommendationEl.textContent = "";
       traceEl.replaceChildren();
+      branchGoals.clear();
 
       const response = await fetch(endpoint, {
         method: "POST",
