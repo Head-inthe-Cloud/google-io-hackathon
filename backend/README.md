@@ -57,13 +57,58 @@ On first startup the server auto-seeds the catalog from `gymshark_closet_invento
 
 ---
 
+## Architecture — Frontend ↔ Backend Integration
+
+The frontend (React/Vite + Express) connects to this backend through an API proxy:
+
+```
+┌────────────────────┐         ┌─────────────────────────────────────┐
+│  Frontend (Vite)   │         │  Backend (FastAPI)                  │
+│  :3000             │         │  :8000                              │
+│                    │         │                                     │
+│  React UI ────────────/api/*─────►  Catalog (PostgreSQL)           │
+│                    │  proxy   │  Gemini AI (recommendations)       │
+│  Express server    │         │  Replicate (virtual try-on)        │
+│  (dev proxy)       │         │  S3 (image uploads)                │
+└────────────────────┘         └─────────────────────────────────────┘
+```
+
+### How it works:
+1. **Vite dev proxy** (`vite.config.ts`) forwards `/api/*` → `http://localhost:8000`
+2. **Express server** (`server.ts`) also proxies `/api/*` for production builds
+3. **Frontend API layer** (`src/api.ts`) provides typed functions for all backend calls
+4. **Catalog** is seeded from `gymshark_closet_inventory.json` into PostgreSQL on startup
+5. **Frontend loads catalog** from `/api/catalog` on mount, with pagination & filtering
+
+### Running both together:
+```bash
+# Terminal 1: Backend
+cd backend && uv run uvicorn main:app --reload --port 8000
+
+# Terminal 2: Frontend
+cd frontend && npm run dev
+```
+
+Then open http://localhost:3000 — all API calls are automatically proxied to the backend.
+
+---
+
 ## API Surface
 
 ### Catalog (read-only, served from DB)
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/catalog` | List items (filter: `gender`, `category`) |
+| `GET` | `/api/catalog` | List items (filter: `gender`, `category`, `search`, `color`, `activity`, `collection`; paginate: `limit`, `offset`) |
+| `GET` | `/api/catalog/categories` | Category counts |
 | `GET` | `/api/catalog/{item_id}` | Single item detail |
+
+### Frontend-Compatible Endpoints
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/analyze-item` | Gemini vision: analyze clothing image (base64) |
+| `POST` | `/api/recommend` | AI outfit recommendations (closet + preferences + prompt) |
+| `POST` | `/api/generate-try-on` | Gemini image generation: synthetic try-on |
+| `POST` | `/api/upload-url` | S3 presigned URL for image upload |
 
 ### Shopper Sessions
 | Method | Path | Description |
@@ -72,12 +117,12 @@ On first startup the server auto-seeds the catalog from `gymshark_closet_invento
 | `GET` | `/api/sessions/{session_token}` | Get session |
 | `PATCH` | `/api/sessions/{session_token}` | Update preferences |
 
-### Outfit Recommendation
+### Session-Based Outfit Recommendation
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/api/sessions/{session_token}/recommend` | Generate outfit recommendations |
+| `POST` | `/api/sessions/{session_token}/recommend` | Generate outfit recommendations (with vector search) |
 
-### Virtual Try-On
+### Virtual Try-On (Replicate)
 | Method | Path | Description |
 |--------|------|-------------|
 | `POST` | `/api/virtual-try-on` | Single try-on |
@@ -90,7 +135,8 @@ On first startup the server auto-seeds the catalog from `gymshark_closet_invento
 | `POST` | `/api/guardrail-check` | Validate try-on faithfulness (Gemini 3.5 Flash) |
 | `POST` | `/api/rank-outfits` | Fashion Master ranking (stub) |
 
-### Utility
+### Health
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/` | Health check + catalog stats |
+| `GET` | `/api/health` | Same (alias for frontend) |
