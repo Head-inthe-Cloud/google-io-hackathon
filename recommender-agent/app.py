@@ -50,6 +50,7 @@ class ImageInput(BaseModel):
 class RecommendationRequest(BaseModel):
     query: str = Field(..., min_length=1)
     preference_stack: str = ""
+    dataset: Optional[str] = None
     images: List[ImageInput] = Field(default_factory=list)
     target_sets: int = Field(default=5, ge=1, le=10)
     max_depth: int = Field(default=2, ge=0, le=5)
@@ -60,7 +61,22 @@ class RecommendationRequest(BaseModel):
     model: Optional[str] = None
 
 
-def _catalog_path() -> Path:
+def _data_catalog_path(filename: str) -> Path:
+    docker_path = Path("/data") / filename
+    if docker_path.exists():
+        return docker_path
+    return SERVICE_ROOT.parent / "data" / filename
+
+
+def _catalog_path(dataset: Optional[str] = None) -> Path:
+    if dataset:
+        dataset_paths = {
+            "gymshark": os.getenv("GYMSHARK_CATALOG_PATH", str(_data_catalog_path("gymshark_products.json"))),
+            "dataset2": os.getenv("DATASET2_CATALOG_PATH", str(_data_catalog_path("dataset2_products.json"))),
+        }
+        if dataset not in dataset_paths:
+            raise ValueError(f"Unknown dataset '{dataset}'. Expected one of: {', '.join(sorted(dataset_paths))}.")
+        return Path(dataset_paths[dataset]).expanduser()
     return Path(os.getenv("CATALOG_PATH", str(DEFAULT_CATALOG_PATH))).expanduser()
 
 
@@ -73,8 +89,8 @@ def _load_catalog(path: str) -> Catalog:
     return Catalog.load(path)
 
 
-def _get_catalog() -> Catalog:
-    path = _catalog_path()
+def _get_catalog(dataset: Optional[str] = None) -> Catalog:
+    path = _catalog_path(dataset)
     if not path.exists():
         raise FileNotFoundError(f"Catalog file not found at {path}")
     return _load_catalog(str(path))
@@ -140,7 +156,7 @@ def example_request() -> Dict[str, Any]:
 @app.post("/api/recommend")
 def recommend(request: RecommendationRequest) -> Dict[str, Any]:
     try:
-        catalog = _get_catalog()
+        catalog = _get_catalog(request.dataset)
         llm_client = GeminiJSONClient(model=_model_name(request.model))
         return recommend_product_sets(
             catalog,
@@ -160,6 +176,8 @@ def recommend(request: RecommendationRequest) -> Dict[str, Any]:
         )
     except FileNotFoundError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except LLMConfigurationError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
@@ -170,7 +188,7 @@ def recommend(request: RecommendationRequest) -> Dict[str, Any]:
 
 
 def _run_recommendation(request: RecommendationRequest, progress_callback):
-    catalog = _get_catalog()
+    catalog = _get_catalog(request.dataset)
     llm_client = GeminiJSONClient(model=_model_name(request.model))
     return recommend_product_sets(
         catalog,

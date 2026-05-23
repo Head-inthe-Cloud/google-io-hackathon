@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Recommendation Test</title>
+  <title>Dataset 2 Recommendation Test</title>
   <style>
     body {
       margin: 0;
@@ -106,7 +106,7 @@
 </head>
 <body>
   <main>
-    <h1>Recommendation Test</h1>
+    <h1>Dataset 2 Recommendation Test</h1>
 
     <section>
       <h2>Query</h2>
@@ -131,7 +131,23 @@
 
   <script>
     const endpoint = "http://localhost:8001/api/recommend/stream";
-    const requestEndpoint = "http://localhost:8001/api/example-request";
+    const dataset2Request = {
+      dataset: "dataset2",
+      query: "A customer wants a polished everyday outfit for a casual office and dinner after work. They like neutral colors, clean silhouettes, comfortable layers, and do not want loud logos or anything too revealing.",
+      preference_stack: [
+        "The shopper prefers minimal, versatile pieces that can move from workday to evening.",
+        "They like black, white, grey, navy, olive, denim, and muted earth tones.",
+        "They prefer structured but comfortable fits, easy layering, and understated styling.",
+        "They avoid neon colors, loud graphics, bodycon party looks, and heavily distressed clothing."
+      ].join("\n"),
+      images: [],
+      target_sets: 3,
+      max_depth: 1,
+      max_branches_per_layer: 6,
+      candidates_per_branch: 24,
+      top_text_candidates: 20,
+      include_debug: false
+    };
     const queryEl = document.getElementById("query");
     const policyEl = document.getElementById("preference-policy");
     const recommendationEl = document.getElementById("recommendation");
@@ -244,13 +260,8 @@
       if (eventName === "result") renderProducts(data.result);
     }
 
-    async function loadRequest() {
-      const response = await fetch(requestEndpoint);
-      return response.json();
-    }
-
     async function runLiveQuery() {
-      const request = await loadRequest();
+      const request = dataset2Request;
       renderRequest(request);
       recommendationEl.textContent = "";
       traceEl.replaceChildren();
