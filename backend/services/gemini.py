@@ -21,6 +21,13 @@ def init_gemini():
     return False
 
 
+def get_client():
+    """Return the initialized Gemini client, or None if not configured."""
+    if not init_gemini():
+        return None
+    return client
+
+
 def fetch_image_bytes(image_url: str) -> bytes:
     """Fetch image bytes from a URL."""
     if "mock" in image_url or image_url.startswith("http://localhost"):

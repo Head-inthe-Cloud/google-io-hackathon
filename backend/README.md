@@ -8,15 +8,14 @@ An AI-powered styling backend for online retailers. The store's product catalog 
 - **Framework:** FastAPI + Uvicorn
 - **AI Models:** Google Gemini 2.0 Flash (via `google-genai` SDK), Replicate (IDM-VTON for try-on)
 - **Database:** PostgreSQL + pgvector (via SQLAlchemy)
-- **Package Manager:** `uv`
+- **Package Manager:** Conda (`environment.yml`)
 
 ---
 
 ## Setup
 
 ### 1. Prerequisites
-- Python 3.13+
-- `uv` package manager
+- [Conda](https://docs.conda.io/) (Miniconda or Anaconda)
 - PostgreSQL with the `pgvector` extension
 
 ### 2. Environment Variables
@@ -30,10 +29,24 @@ Required keys:
 - `REPLICATE_API_TOKEN` — from Replicate (for virtual try-on)
 
 ### 3. Install & Run
+
+For **local agent/model testing**, use the existing `ai2` conda env:
+
 ```bash
+conda activate ai2
+pip install google-genai python-dotenv   # if not already installed
+
 cd backend
-uv sync
-uv run uvicorn main:app --reload --port 8000
+python scripts/test_tryon_guardrail.py --dry-run --all
+python scripts/test_tryon_guardrail.py --scenario rec_m_gym_001
+```
+
+For the **full FastAPI server** (Postgres, Replicate, etc.), install all deps from [`environment.yml`](../environment.yml) or `pip install` the packages listed in [`pyproject.toml`](pyproject.toml).
+
+```bash
+conda activate ai2
+cd backend
+uvicorn main:app --reload --port 8000
 ```
 
 On first startup the server auto-seeds the catalog from `gymshark_closet_inventory.json` at the project root.
@@ -74,7 +87,7 @@ On first startup the server auto-seeds the catalog from `gymshark_closet_invento
 ### Agent Pipeline Stubs
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/api/guardrail-check` | Validate try-on faithfulness (stub) |
+| `POST` | `/api/guardrail-check` | Validate try-on faithfulness (Gemini 3.5 Flash) |
 | `POST` | `/api/rank-outfits` | Fashion Master ranking (stub) |
 
 ### Utility

@@ -30,15 +30,17 @@ Items were chosen from the full Gymshark closet inventory to cover:
 | Color/pattern stress test | `rec_w_adapt_002` | Adapt fleck top + leggings |
 | Complex garment types | `rec_w_layered_003` | Sports bra + leggings + zip pullover |
 
-## Customer photos (you provide)
+## Customer photos
 
-Add customer test photos under `tests/fixtures/customers/` when ready:
+Test photos for try-on agent development (stock placeholders):
 
 ```
 customers/
-  customer_01_fullbody.jpg   # happy path
-  customer_02_upperbody.jpg  # partial body edge case
+  customer_01_fullbody.jpeg   # default for test script
+  customer_02_upperbody.jpeg  # partial framing edge case
 ```
+
+Replace with real full-body customer photos for better try-on quality during demo prep.
 
 ## Guardrail labels (you provide)
 
@@ -48,3 +50,7 @@ After generating try-ons, label outputs in `guardrail_labels.json` (not yet crea
 
 Full inventory: `data/gymshark_closet_inventory.json` (52 items, mens + womens)  
 Full product catalog: `data/gymshark_products.json` (8000+ items)
+
+## Generated outputs
+
+The test script writes try-on PNGs and guardrail JSON to `tests/fixtures/outputs/` (gitignored).

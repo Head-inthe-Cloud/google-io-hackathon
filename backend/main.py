@@ -13,6 +13,7 @@ from typing import List, Optional, Dict, Any
 from database import engine, SessionLocal, Base, get_db
 from models import CatalogItem, ShopperSession, Outfit
 from services import gemini as gemini_service
+from services import guardrail_agent
 from services import replicate_service
 
 # ---------------------------------------------------------------------------
@@ -367,18 +368,29 @@ def try_on_status(prediction_id: str):
 # ---------------------------------------------------------------------------
 @app.post("/api/guardrail-check")
 def guardrail_check(request: GuardrailCheckRequest):
-    """
-    Validate a try-on image for faithfulness.
-    TODO: Implement Guardrail Agent — compare generated image against inputs.
-    """
-    # Stub response
-    return {
-        "outfit_id": request.outfit_id,
-        "pass": True,
-        "faithfulness_score": 0.0,
-        "issues": [],
-        "_note": "Stub — Guardrail Agent not yet implemented.",
-    }
+    """Validate a try-on image for faithfulness via the Guardrail Agent."""
+    try:
+        customer_bytes = gemini_service.fetch_image_bytes(request.selfie_url)
+        tryon_bytes = gemini_service.fetch_image_bytes(request.tryon_image_url)
+        garment_images = [
+            gemini_service.fetch_image_bytes(url) for url in request.garment_urls
+        ]
+
+        metadata = {
+            "recommendation_id": request.outfit_id,
+            "garment_urls": request.garment_urls,
+        }
+
+        result = guardrail_agent.check_tryon_guardrail(
+            customer_image=customer_bytes,
+            garment_images=garment_images,
+            tryon_image=tryon_bytes,
+            metadata=metadata,
+        )
+        result["outfit_id"] = request.outfit_id
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/rank-outfits")
