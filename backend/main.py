@@ -13,8 +13,9 @@ import json
 import uuid
 import datetime
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from typing import Any, Dict, List, Optional
 
 import store
@@ -74,6 +75,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Create static directory if not exists
+os.makedirs("static/uploads", exist_ok=True)
+
+# Mount static directory for serving uploads locally
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 # ===========================================================================
@@ -821,25 +828,17 @@ def try_on_status(prediction_id: str):
 
 @app.post("/api/guardrail-check")
 def guardrail_check(request: GuardrailCheckRequest):
-    """Validate a try-on image for faithfulness via the Guardrail Agent."""
+    """
+    Validate a try-on image for faithfulness via the Guardrail Agent.
+    Compares generated image against customer photo + garment references.
+    """
     try:
-        customer_bytes = gemini_service.fetch_image_bytes(request.selfie_url)
-        tryon_bytes = gemini_service.fetch_image_bytes(request.tryon_image_url)
-        garment_images = [
-            gemini_service.fetch_image_bytes(url) for url in request.garment_urls
-        ]
-
-        metadata = {
-            "recommendation_id": request.outfit_id,
-            "garment_urls": request.garment_urls,
-        }
-
-        result = guardrail_agent.check_tryon_guardrail(
-            customer_image=customer_bytes,
-            garment_images=garment_images,
-            tryon_image=tryon_bytes,
-            metadata=metadata,
+        result = gemini_service.verify_tryon_faithfulness(
+            selfie_url=request.selfie_url,
+            tryon_image_url=request.tryon_image_url,
+            garment_urls=request.garment_urls,
         )
+        result["recommendation_id"] = request.outfit_id
         result["outfit_id"] = request.outfit_id
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -851,7 +850,7 @@ def guardrail_check(request: GuardrailCheckRequest):
             "guardrail_pass": result["pass"],
             "guardrail_score": result["faithfulness_score"],
             "guardrail_issues": result["issues"],
-            "guardrail_dimension_scores": result["dimension_scores"],
+            "guardrail_dimension_scores": result.get("dimension_scores"),
             "guardrail_checked_at": datetime.datetime.utcnow().isoformat(),
         })
 
@@ -1102,6 +1101,27 @@ def get_upload_url(request: UploadUrlRequest):
     if result is None:
         raise HTTPException(status_code=500, detail="Failed to generate upload URL")
     return result
+
+
+@app.post("/api/mock-upload")
+@app.put("/api/mock-upload")
+async def mock_upload(request: Request, filename: str):
+    """Fallback endpoint to handle direct local uploads when S3 is disabled."""
+    body_bytes = await request.body()
+    filepath = f"static/uploads/{filename}"
+    
+    # Save raw bytes
+    try:
+        with open(filepath, "wb") as f:
+            f.write(body_bytes)
+        print(f"Successfully uploaded mock file: {filepath} ({len(body_bytes)} bytes)")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to write mock file: {str(e)}")
+
+    return {
+        "status": "success",
+        "file_url": f"http://localhost:8000/static/uploads/{filename}"
+    }
 
 
 # ===========================================================================
