@@ -6,5 +6,6 @@
   "max_depth": 2,
   "max_branches_per_layer": 12,
   "candidates_per_branch": 24,
+  "top_text_candidates": 20,
   "include_debug": false
 }

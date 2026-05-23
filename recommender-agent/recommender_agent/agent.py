@@ -90,6 +90,8 @@ Your only job is to recommend buyable product sets for the user.
 Each recommendation must be a combination set: a list of catalog items to buy.
 Use only candidate_id values present in the candidate pools. Do not invent products.
 Respect the user's query, preference stack, visual inputs, and search evidence.
+Return exactly target_number_of_sets product sets when enough candidate coverage
+exists. If fewer sets are possible, return the maximum coherent count.
 
 Return JSON:
 {
@@ -133,6 +135,33 @@ compiled context. Return JSON:
     {"set_id": "set_id", "reason": "string"}
   ],
   "notes": ["string"]
+}
+"""
+
+
+CANDIDATE_IMAGE_SCORER_PROMPT = """
+You are the Candidate Image Scoring Agent for a retail styling recommender.
+
+You receive:
+- compiled shopping context
+- the top text-retrieved catalog candidates only
+- product images attached in the exact candidate_image_order
+
+Score each candidate independently for recommendation fit. Use the product text,
+categories, compiled context, and visible product image. Do not invent products.
+Do not score any item not present in candidate_image_order.
+
+Return JSON:
+{
+  "candidate_scores": [
+    {
+      "candidate_id": "string",
+      "recommendation_score": 0.0,
+      "text_alignment_score": 0.0,
+      "visual_alignment_score": 0.0,
+      "score_reason": "string"
+    }
+  ]
 }
 """
 
@@ -190,6 +219,26 @@ def _branch_signature(branch):
     )
 
 
+def _branch_text(branch):
+    chunks = [branch.get("goal"), branch.get("why")]
+    for filter_map_name in ["filters", "exclude_filters"]:
+        filter_map = branch.get(filter_map_name) or {}
+        for field, values in filter_map.items():
+            chunks.append(field)
+            chunks.extend(str(value) for value in _as_list(values))
+    return normalize_text(" ".join(str(chunk or "") for chunk in chunks))
+
+
+def _text_relevance_score(catalog, product, branch):
+    branch_tokens = set(_branch_text(branch).split())
+    if not branch_tokens:
+        return 0.0
+    product_tokens = set(catalog.text_for(product).split())
+    if not product_tokens:
+        return 0.0
+    return round(len(branch_tokens & product_tokens) / len(branch_tokens), 4)
+
+
 def retrieve_branch_candidates(catalog, branch, business_filters, limit):
     filters = _merge_filters(business_filters.get("filters"), branch.get("filters"))
     exclude_filters = _merge_filters(
@@ -203,10 +252,18 @@ def retrieve_branch_candidates(catalog, branch, business_filters, limit):
             continue
         if _matches_any_exclude(product, exclude_filters):
             continue
-        matches.append(catalog.compact_product(product, f"p{index}"))
-        if len(matches) >= limit:
-            break
-    return matches
+        candidate = catalog.compact_product(product, f"p{index}")
+        candidate["text_relevance_score"] = _text_relevance_score(catalog, product, branch)
+        matches.append(candidate)
+
+    matches.sort(
+        key=lambda candidate: (
+            candidate.get("text_relevance_score") or 0.0,
+            candidate.get("product_name") or "",
+        ),
+        reverse=True,
+    )
+    return matches[:limit]
 
 
 def _emit_progress(progress_callback, event_type, **payload):
@@ -267,6 +324,88 @@ def critique_product_sets(llm_client, compiled_context, product_sets, candidate_
     )
 
 
+def score_candidates_with_images(llm_client, compiled_context, candidates):
+    candidates_with_images = [
+        candidate
+        for candidate in candidates
+        if candidate.get("image_url")
+    ]
+    return llm_client.generate_json(
+        CANDIDATE_IMAGE_SCORER_PROMPT,
+        {
+            "compiled_context": compiled_context,
+            "candidate_image_order": [
+                {
+                    "candidate_id": candidate.get("candidate_id"),
+                    "product_name": candidate.get("product_name"),
+                    "image_url": candidate.get("image_url"),
+                }
+                for candidate in candidates_with_images
+            ],
+            "top_text_retrieved_candidates": candidates_with_images,
+        },
+        images=[
+            {"url": candidate["image_url"]}
+            for candidate in candidates_with_images
+        ],
+    )
+
+
+def _top_text_candidates(candidate_pools, limit):
+    by_id = {}
+    for pool in candidate_pools:
+        for candidate in pool.get("candidates") or []:
+            candidate_id = candidate.get("candidate_id")
+            if not candidate_id:
+                continue
+            current = by_id.get(candidate_id)
+            if not current or (candidate.get("text_relevance_score") or 0.0) > (current.get("text_relevance_score") or 0.0):
+                by_id[candidate_id] = candidate
+
+    ranked = sorted(
+        by_id.values(),
+        key=lambda candidate: (
+            candidate.get("text_relevance_score") or 0.0,
+            candidate.get("product_name") or "",
+        ),
+        reverse=True,
+    )[:limit]
+    ranked_ids = {candidate["candidate_id"] for candidate in ranked}
+
+    limited_pools = []
+    for pool in candidate_pools:
+        candidates = [
+            candidate
+            for candidate in pool.get("candidates") or []
+            if candidate.get("candidate_id") in ranked_ids
+        ]
+        if not candidates:
+            continue
+        updated_pool = dict(pool)
+        updated_pool["candidate_count"] = len(candidates)
+        updated_pool["candidates"] = candidates
+        limited_pools.append(updated_pool)
+
+    return ranked, limited_pools
+
+
+def _apply_candidate_scores(candidates, score_payload):
+    scores = {
+        score.get("candidate_id"): score
+        for score in (score_payload.get("candidate_scores") or [])
+        if score.get("candidate_id")
+    }
+    for candidate in candidates:
+        score = scores.get(candidate.get("candidate_id"))
+        if not score:
+            continue
+        candidate["recommendation_score"] = score.get("recommendation_score")
+        candidate["text_alignment_score"] = score.get("text_alignment_score")
+        candidate["visual_alignment_score"] = score.get("visual_alignment_score")
+        candidate["score_reason"] = score.get("score_reason")
+    return candidates
+
+
 def hydrate_product_sets(product_sets, candidate_lookup):
     hydrated = []
     for product_set in product_sets:
@@ -276,14 +415,31 @@ def hydrate_product_sets(product_sets, candidate_lookup):
             product = candidate_lookup.get(candidate_id)
             if not product:
                 continue
-            hydrated_items.append(
-                {
-                    "candidate_id": candidate_id,
-                    "role": item.get("role"),
-                    "why_this_item": item.get("why_this_item"),
-                    "product": product,
-                }
-            )
+            product_details = {
+                key: value
+                for key, value in product.items()
+                if key not in [
+                    "recommendation_score",
+                    "text_alignment_score",
+                    "visual_alignment_score",
+                    "score_reason",
+                ]
+            }
+            hydrated_item = {
+                "candidate_id": candidate_id,
+                "role": item.get("role"),
+                "why_this_item": item.get("why_this_item"),
+                "product": product_details,
+            }
+            for score_key in [
+                "recommendation_score",
+                "text_alignment_score",
+                "visual_alignment_score",
+                "score_reason",
+            ]:
+                if score_key in product:
+                    hydrated_item[score_key] = product[score_key]
+            hydrated_items.append(hydrated_item)
         if hydrated_items:
             updated = dict(product_set)
             updated["items"] = hydrated_items
@@ -301,6 +457,7 @@ def recommend_product_sets(
     max_depth=2,
     max_branches_per_layer=12,
     candidates_per_branch=24,
+    top_text_candidates=20,
     include_debug=False,
     progress_callback=None,
 ):
@@ -312,6 +469,7 @@ def recommend_product_sets(
         max_depth=max_depth,
         max_branches_per_layer=max_branches_per_layer,
         candidates_per_branch=candidates_per_branch,
+        top_text_candidates=top_text_candidates,
     )
     _emit_progress(progress_callback, "context_compiler.started")
     compiled_context = compile_context(
@@ -440,6 +598,42 @@ def recommend_product_sets(
 
     _emit_progress(
         progress_callback,
+        "text_retrieval.started",
+        candidate_pool_count=len(candidate_pools),
+        unique_candidate_count=len(candidate_lookup),
+    )
+    top_candidates, candidate_pools = _top_text_candidates(candidate_pools, top_text_candidates)
+    candidate_lookup = {
+        candidate["candidate_id"]: candidate
+        for candidate in top_candidates
+    }
+    _emit_progress(
+        progress_callback,
+        "text_retrieval.completed",
+        top_text_candidate_limit=top_text_candidates,
+        top_text_candidate_count=len(top_candidates),
+        candidate_ids=[candidate.get("candidate_id") for candidate in top_candidates],
+    )
+
+    _emit_progress(
+        progress_callback,
+        "candidate_image_scoring.started",
+        candidate_count=len(top_candidates),
+    )
+    score_payload = score_candidates_with_images(llm_client, compiled_context, top_candidates)
+    top_candidates = _apply_candidate_scores(top_candidates, score_payload)
+    candidate_lookup = {
+        candidate["candidate_id"]: candidate
+        for candidate in top_candidates
+    }
+    _emit_progress(
+        progress_callback,
+        "candidate_image_scoring.completed",
+        scored_candidate_count=len(score_payload.get("candidate_scores") or []),
+    )
+
+    _emit_progress(
+        progress_callback,
         "set_builder.started",
         candidate_pool_count=len(candidate_pools),
         unique_candidate_count=len(candidate_lookup),
@@ -491,8 +685,10 @@ def recommend_product_sets(
                 "max_depth": max_depth,
                 "max_branches_per_layer": max_branches_per_layer,
                 "candidates_per_branch": candidates_per_branch,
+                "top_text_candidates": top_text_candidates,
                 "branches": trace,
             },
+            "candidate_scores": score_payload,
             "critic": critique,
         }
     _emit_progress(

@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, model_validator
 
@@ -24,6 +25,13 @@ app = FastAPI(
     title="Recommendation Agent",
     description="Standalone product-set recommendation agent service.",
     version="0.1.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -47,6 +55,7 @@ class RecommendationRequest(BaseModel):
     max_depth: int = Field(default=2, ge=0, le=5)
     max_branches_per_layer: int = Field(default=12, ge=1, le=40)
     candidates_per_branch: int = Field(default=24, ge=1, le=100)
+    top_text_candidates: int = Field(default=20, ge=1, le=100)
     include_debug: bool = False
     model: Optional[str] = None
 
@@ -122,6 +131,12 @@ def sample_output() -> Dict[str, Any]:
         return json.load(file)
 
 
+@app.get("/api/example-request")
+def example_request() -> Dict[str, Any]:
+    with open(SERVICE_ROOT / "examples" / "request.json", encoding="utf-8") as file:
+        return json.load(file)
+
+
 @app.post("/api/recommend")
 def recommend(request: RecommendationRequest) -> Dict[str, Any]:
     try:
@@ -140,6 +155,7 @@ def recommend(request: RecommendationRequest) -> Dict[str, Any]:
             max_depth=request.max_depth,
             max_branches_per_layer=request.max_branches_per_layer,
             candidates_per_branch=request.candidates_per_branch,
+            top_text_candidates=request.top_text_candidates,
             include_debug=request.include_debug,
         )
     except FileNotFoundError as exc:
@@ -169,6 +185,7 @@ def _run_recommendation(request: RecommendationRequest, progress_callback):
         max_depth=request.max_depth,
         max_branches_per_layer=request.max_branches_per_layer,
         candidates_per_branch=request.candidates_per_branch,
+        top_text_candidates=request.top_text_candidates,
         include_debug=request.include_debug,
         progress_callback=progress_callback,
     )

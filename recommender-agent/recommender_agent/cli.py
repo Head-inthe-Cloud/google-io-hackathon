@@ -28,6 +28,7 @@ def main(argv=None):
     parser.add_argument("--max-depth", type=int, default=3)
     parser.add_argument("--max-branches-per-layer", type=int, default=12)
     parser.add_argument("--candidates-per-branch", type=int, default=24)
+    parser.add_argument("--top-text-candidates", type=int, default=20)
     parser.add_argument("--model", default="gemini-3.5-flash")
     parser.add_argument("--include-debug", action="store_true")
     args = parser.parse_args(argv)
@@ -49,6 +50,7 @@ def main(argv=None):
         max_depth=args.max_depth,
         max_branches_per_layer=args.max_branches_per_layer,
         candidates_per_branch=args.candidates_per_branch,
+        top_text_candidates=args.top_text_candidates,
         include_debug=args.include_debug,
     )
 
