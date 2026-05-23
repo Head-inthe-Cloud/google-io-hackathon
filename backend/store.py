@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
-CATALOG_JSON_PATH = Path(__file__).resolve().parent.parent / "gymshark_closet_inventory.json"
+CATALOG_JSON_PATH = Path(__file__).resolve().parent.parent / "data" / "gymshark_closet_inventory.json"
 
 # ---------------------------------------------------------------------------
 # In-memory tables
