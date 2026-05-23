@@ -15,3 +15,7 @@ test-agents scenario="rec_m_gym_001":
 
 test-agents-dry:
     cd backend && conda run -n ai2 python scripts/test_tryon_guardrail.py --dry-run --all
+
+# Deploy the application to Google Cloud Run (unified frontend + backend)
+deploy:
+    gcloud run deploy stylist-copilot --source . --env-vars-file=backend/.env --port=8080 --allow-unauthenticated

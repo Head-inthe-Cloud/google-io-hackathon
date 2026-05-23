@@ -121,6 +121,53 @@ export async function fetchCatalogItem(itemId: number): Promise<BackendCatalogIt
 }
 
 // ---------------------------------------------------------------------------
+// Advanced Catalog Search Tree & Facets
+// ---------------------------------------------------------------------------
+export interface SearchTreeResponse {
+  total_products: number;
+  navigation_order: string[];
+  navigation_tree: NavigationNode[];
+  facet_fields: string[];
+  facets: Record<string, FacetItem[]>;
+}
+
+export interface NavigationNode {
+  field: string;
+  value: string;
+  label: string;
+  count: number;
+  children?: NavigationNode[];
+}
+
+export interface FacetItem {
+  value: string;
+  label: string;
+  count: number;
+}
+
+/** Fetch catalog search tree. Supports dataset: 'current' | 'dataset2' | 'gymshark' */
+export async function fetchCatalogSearchTree(dataset = "current"): Promise<SearchTreeResponse> {
+  const res = await fetch(`${API_BASE}/api/catalog/search-tree?dataset=${dataset}`);
+  if (!res.ok) throw new Error(`Search tree fetch failed: ${res.status}`);
+  return res.json();
+}
+
+/** Fetch catalog facets. Supports dataset: 'current' | 'dataset2' | 'gymshark' */
+export async function fetchCatalogFacets(dataset = "current"): Promise<Record<string, FacetItem[]>> {
+  const res = await fetch(`${API_BASE}/api/catalog/facets?dataset=${dataset}`);
+  if (!res.ok) throw new Error(`Facets fetch failed: ${res.status}`);
+  const data = await res.json();
+  return data.facets;
+}
+
+/** Fetch catalog hierarchical navigation tree. Supports dataset: 'current' | 'dataset2' | 'gymshark' */
+export async function fetchCatalogNavigation(dataset = "current"): Promise<{ navigation_order: string[]; navigation_tree: NavigationNode[] }> {
+  const res = await fetch(`${API_BASE}/api/catalog/navigation?dataset=${dataset}`);
+  if (!res.ok) throw new Error(`Navigation fetch failed: ${res.status}`);
+  return res.json();
+}
+
+// ---------------------------------------------------------------------------
 // Analyze Item (Gemini Vision)
 // ---------------------------------------------------------------------------
 export interface AnalyzeItemResult {

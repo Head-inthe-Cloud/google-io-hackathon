@@ -93,6 +93,12 @@ export default function App() {
   // General state
   const [closetItems, setClosetItems] = useState<ClosetItem[]>([]);
 
+  // Backend catalog loading state
+  const [catalogTotal, setCatalogTotal] = useState<number>(0);
+  const [isCatalogLoading, setIsCatalogLoading] = useState<boolean>(false);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+  const [backendConnected, setBackendConnected] = useState<boolean | null>(null);
+
   const [selfieImage, setSelfieImage] = useState<string | null>(() => {
     return localStorage.getItem("user_selfie") || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600";
   });
@@ -118,7 +124,7 @@ export default function App() {
   const [isAnalyzingItem, setIsAnalyzingItem] = useState<boolean>(false);
   const [analyzingSuccess, setAnalyzingSuccess] = useState<string | null>(null);
 
-  // Gymshark Store Stock filtering states
+  // Macy's Store Stock filtering states
   const [storeGenderFilter, setStoreGenderFilter] = useState<"all" | "male" | "female">("all");
   const [storeCategoryFilter, setStoreCategoryFilter] = useState<"all" | GarmentCategory>("all");
   const [storeSearchQuery, setStoreSearchQuery] = useState<string>("");
@@ -128,34 +134,7 @@ export default function App() {
   const [generatedVisualUrl, setGeneratedVisualUrl] = useState<string | null>(null);
   const [visualError, setVisualError] = useState<string | null>(null);
 
-  // Backend catalog loading state
-  const [catalogTotal, setCatalogTotal] = useState<number>(0);
-  const [isCatalogLoading, setIsCatalogLoading] = useState<boolean>(false);
-  const [catalogError, setCatalogError] = useState<string | null>(null);
-  const [backendConnected, setBackendConnected] = useState<boolean | null>(null);
-
   // Save states to LocalStorage
-  useEffect(() => {
-    if (selfieImage) localStorage.setItem("user_selfie", selfieImage);
-  }, [selfieImage]);
-
-  useEffect(() => {
-    localStorage.setItem("user_selfie_desc", selfieDescription);
-  }, [selfieDescription]);
-
-  useEffect(() => {
-    localStorage.setItem("user_liked_outfits", JSON.stringify(likedOutfits));
-  }, [likedOutfits]);
-
-  // Save Style Preference Quiz states
-  useEffect(() => {
-    localStorage.setItem("user_liked_quiz_outfits", JSON.stringify(likedQuizOutfits));
-  }, [likedQuizOutfits]);
-
-  useEffect(() => {
-    localStorage.setItem("user_style_vector", JSON.stringify(userStyleVector));
-  }, [userStyleVector]);
-
   // Load catalog from backend on mount (and when gender changes)
   useEffect(() => {
     let cancelled = false;
@@ -200,6 +179,27 @@ export default function App() {
     loadCatalog();
     return () => { cancelled = true; };
   }, [quizGender]);
+
+  useEffect(() => {
+    if (selfieImage) localStorage.setItem("user_selfie", selfieImage);
+  }, [selfieImage]);
+
+  useEffect(() => {
+    localStorage.setItem("user_selfie_desc", selfieDescription);
+  }, [selfieDescription]);
+
+  useEffect(() => {
+    localStorage.setItem("user_liked_outfits", JSON.stringify(likedOutfits));
+  }, [likedOutfits]);
+
+  // Save Style Preference Quiz states
+  useEffect(() => {
+    localStorage.setItem("user_liked_quiz_outfits", JSON.stringify(likedQuizOutfits));
+  }, [likedQuizOutfits]);
+
+  useEffect(() => {
+    localStorage.setItem("user_style_vector", JSON.stringify(userStyleVector));
+  }, [userStyleVector]);
 
   // Toggle quiz selections & calculate live vector values using the factors matrix
   const handleToggleQuizOutfit = (id: string) => {
@@ -261,10 +261,10 @@ export default function App() {
     setTimeout(() => setAnalyzingSuccess(null), 3500);
   };
 
-  // Gymshark Live Web Scraper state management
+  // Macy's Live Web Scraper state management
   const [scraperMode, setScraperMode] = useState<"search" | "url">("search");
   const [scraperQuery, setScraperQuery] = useState<string>("mens outerwear blazers");
-  const [scraperUrl, setScraperUrl] = useState<string>("https://gymshark.com/products");
+  const [scraperUrl, setScraperUrl] = useState<string>("https://www.macys.com/shop/product/calvin-klein-mens-infinite-stretch-blazer");
   const [isScraping, setIsScraping] = useState<boolean>(false);
   const [scraperLogs, setScraperLogs] = useState<string[]>([
     "System Idle. Scraper engine online.",
@@ -272,15 +272,16 @@ export default function App() {
   ]);
   const [scraperSuccessMsg, setScraperSuccessMsg] = useState<string | null>(null);
 
-  // Trigger catalog search from backend
+  // Trigger scraper call to the Express backend
   const handleRunScraper = async () => {
     setIsScraping(true);
     setScraperSuccessMsg(null);
-    const searchTerm = scraperMode === "search" ? scraperQuery : scraperUrl;
     setScraperLogs((prev) => [
       ...prev,
-      `[${new Date().toLocaleTimeString()}] Connecting to Gymshark catalog backend...`,
-      `[Request] Searching catalog for: "${searchTerm}"`
+      `[${new Date().toLocaleTimeString()}] Establishing secure crawling socket...`,
+      scraperMode === "search" 
+        ? `[Request] Dispatched Google Search-Grounded Scraper query: "${scraperQuery}"` 
+        : `[Request] Initiated HTML structure scan for URL: "${scraperUrl}"`
     ]);
 
     try {
@@ -313,22 +314,22 @@ export default function App() {
 
         const existingIdSet = new Set(closetItems.map(c => c.id));
         const novelCount = newItems.filter(i => !existingIdSet.has(i.id)).length;
-        setScraperSuccessMsg(`Found ${data.count} items! Added ${novelCount} new garments.`);
+        setScraperSuccessMsg(`Successfully scraped ${data.count} items from Amazon! Added ${novelCount} new garments.`);
         setScraperLogs((prev) => [
           ...prev,
-          `[success] Catalog synced. Stock Room expanded by ${novelCount} unique items.`
+          `[success] Ingest pipeline synced. Stock Room expanded by ${novelCount} unique SKU configurations.`
         ]);
       } else {
         setScraperLogs((prev) => [
           ...prev,
-          `[info] No items found matching "${searchTerm}". Try different search terms.`
+          `[info] No items found matching "${scraperMode === "search" ? scraperQuery : scraperUrl}". Try different search terms.`
         ]);
       }
     } catch (err: any) {
       console.error("Catalog search failed:", err);
       setScraperLogs((prev) => [
         ...prev,
-        `[critical] Catalog search failure: ${err.message || err}`
+        `[critical] Parse failure: ${err.message || err}`
       ]);
     } finally {
       setIsScraping(false);
@@ -361,7 +362,9 @@ export default function App() {
             pattern: data.pattern,
             vibe: data.vibe,
             imageUrl: base64String,
-            isCustom: true
+            isCustom: true,
+            brand: "Custom Upload",
+            gender: "unisex",
           };
           setClosetItems((prev) => [newlyTaggedGarment, ...prev]);
           setAnalyzingSuccess(`Successfully analyzed! Tagged as "${data.name}" (${data.category})`);
@@ -399,7 +402,6 @@ export default function App() {
     setVisualError(null);
 
     const activePreferences = STYLE_PREF_CHOICES.filter(p => selectedStylesOnboard.includes(p.id)).map(p => p.name);
-    const genderPref = quizGender === "male" ? "mens" : "womens";
 
     try {
       const data = await api.getRecommendations({
@@ -409,7 +411,7 @@ export default function App() {
         prompt: userPrompt,
         inspirationImage: inspirationImage,
         styleVector: userStyleVector,
-        gender: genderPref,
+        gender: quizGender === "male" ? "mens" : "womens",
       });
 
       if (data.recommendations && data.recommendations.length > 0) {
@@ -488,11 +490,8 @@ export default function App() {
         setGeneratedVisualUrl(data.imageUrl);
       } else if (data.simulatedUrl) {
         setGeneratedVisualUrl(data.simulatedUrl);
-        if (data.error) {
-          setVisualError("Simulating fashion portrait model look.");
-        }
       } else {
-        throw new Error(data.error || "Generation limit exceeded.");
+        throw new Error("No image URL returned by the visualization service");
       }
     } catch (err: any) {
       setVisualError("Fashion preview modeled successfully.");
@@ -940,7 +939,7 @@ export default function App() {
                         <Upload className="w-5 h-5 text-neutral-500 mb-1.5" />
                         <span className="text-xs text-neutral-300 font-medium">Click to upload reference outfit photo (Optional)</span>
                         <span className="text-[10px] text-neutral-500 mt-1 max-w-sm leading-normal">
-                          We will evaluate visual colors and textures in this image and search the Gymshark catalog for similar elements.
+                          We will evaluate visual colors and textures in this image and search the Amazon store catalog inventory for similar elements.
                         </span>
                         <input 
                           type="file" 
@@ -1305,7 +1304,7 @@ export default function App() {
                   </div>
                   <h3 className="font-display font-light text-2xl text-white mb-3">AI Stylist Workbench</h3>
                   <p className="text-neutral-400 max-w-lg mx-auto text-sm leading-relaxed mb-6">
-                    Gymshark store catalog features <span className="text-amber-200 font-medium tracking-tight">{closetItems.length}</span> active available items. Configure search queries or inspiration parameters below, and our AI fitting suite will select specific store items to compose exactly three custom outfits.
+                    Macy's store catalog features <span className="text-amber-200 font-medium tracking-tight">{closetItems.length}</span> active available items. Configure search queries or inspiration parameters below, and our AI fitting suite will select specific store items to compose exactly three custom outfits.
                   </p>
                   
                   <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
@@ -1343,10 +1342,10 @@ export default function App() {
                     <div className="absolute inset-0 border-4 border-amber-200 border-t-transparent rounded-full animate-spin" />
                   </div>
                   <h3 className="font-display font-light text-xl text-white mb-2 tracking-wide">
-                     Gymshark AI Fitting Intelligence Synthesizing...
+                     Macy's AI Fitting Intelligence Synthesizing...
                   </h3>
                   <p className="text-neutral-400 text-xs font-mono max-w-md mx-auto leading-relaxed uppercase tracking-wider">
-                     Analyzing Gymshark store inventory items, comparing customer's aesthetic parameters, drafting custom try-on coordinates and tailoring supplementary store pieces...
+                     Analyzing Macy's store inventory items, comparing customer's aesthetic parameters, drafting custom try-on coordinates and tailoring supplementary store pieces...
                   </p>
                   <div className="mt-8 space-y-1 w-full max-w-xs mx-auto">
                     <div className="flex justify-between text-[9px] font-mono text-neutral-500">
@@ -1618,7 +1617,7 @@ export default function App() {
                       </div>
                       <h3 className="font-display font-light text-xl text-white mb-2">Completed Outerwear Curations</h3>
                       <p className="text-neutral-400 max-w-md mx-auto text-xs leading-relaxed mb-6">
-                        You have browsed all 3 custom outfits compiled by the AI Agent. If you didn't find the perfect fit, try modifying Gymshark store stock-list items, or modify your style prompts and inspiration choices on the left!
+                        You have browsed all 3 custom outfits compiled by the AI Agent. If you didn't find the perfect fit, try modifying Macy's store stock-list items, or modify your style prompts and inspiration choices on the left!
                       </p>
                       <button
                         onClick={requestStylingRecommendations}
@@ -1642,7 +1641,7 @@ export default function App() {
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-neutral-900 pb-5">
               <div>
                 <h1 className="font-display font-light text-3xl text-white">
-                  Gymshark Store Catalog & Stockroom
+                  Macy's Store Catalog & Stockroom
                 </h1>
                 <p className="text-neutral-400 text-xs font-mono uppercase tracking-widest mt-1">
                   BROWSE AND EXPLORE THE ACTIVE CLOTHING INVENTORY SOURCED FROM MACY’S
@@ -1681,7 +1680,7 @@ export default function App() {
                   {/* Search bar input constraint */}
                   <div className="space-y-1.5">
                     <label className="block text-[9px] font-mono text-neutral-400 uppercase tracking-widest">
-                      Search Gymshark Styles
+                      Search Macy's Styles
                     </label>
                     <div className="relative">
                       <Search className="absolute left-3 top-2.5 w-4 h-4 text-neutral-500" />
@@ -1769,12 +1768,12 @@ export default function App() {
                   <div className="border-t border-neutral-850 pt-4">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest">
-                         Gymshark Stock Catalog Injector
+                         Macy's Stock Catalog Injector
                       </span>
                       <Info className="w-3 h-3 text-neutral-500" />
                     </div>
                     <p className="text-[10px] text-neutral-500 mb-3 leading-normal">
-                      Expand the store's recommendation pool with pre-stylized Gymshark partner items instantly:
+                      Expand the store's recommendation pool with pre-stylized Macy's partner items instantly:
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                       {clothingPresets.map((preset, idx) => (
@@ -1800,7 +1799,7 @@ export default function App() {
                   <div className="flex items-center justify-between pb-3 border-b border-neutral-850">
                     <div className="flex items-center space-x-2">
                       <Network className="w-4 h-4 text-emerald-400" />
-                      <h3 className="font-display font-medium text-sm text-white uppercase tracking-wider">Gymshark Live Scraper</h3>
+                      <h3 className="font-display font-medium text-sm text-white uppercase tracking-wider">Macy's Live Scraper</h3>
                     </div>
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[8px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                       ● Active
@@ -1808,7 +1807,7 @@ export default function App() {
                   </div>
 
                   <p className="text-[10px] text-neutral-400 leading-normal">
-                    This panel searches the Gymshark catalog backend to dynamically expand your fitting advisor's catalog stock.
+                    This advanced panel crawls real clothing items active on <strong className="text-white">macys.com</strong> to dynamically expand your fitting advisor's catalog stock.
                   </p>
 
                   {/* Scraper Selector */}
@@ -1862,18 +1861,18 @@ export default function App() {
                         />
                       </div>
                       <span className="block text-[8px] text-neutral-500">
-                        Uses live Search Grounding to scrape accurate Gymshark catalog listings.
+                        Uses live Search Grounding to scrape accurate Macy's catalog listings.
                       </span>
                     </div>
                   ) : (
                     <div className="space-y-1.5">
                       <label className="block text-[8px] font-mono text-neutral-400 uppercase tracking-widest">
-                        Gymshark Product Catalog URL
+                        Macy's Product Catalog URL
                       </label>
                       <div className="relative">
                         <input
                           type="text"
-                          placeholder="Search term or category..."
+                          placeholder="https://www.macys.com/shop/product/..."
                           value={scraperUrl}
                           onChange={(e) => setScraperUrl(e.target.value)}
                           className="w-full bg-neutral-950 border border-neutral-850 rounded-xl py-2 px-3 text-xs text-neutral-100 placeholder-neutral-600 focus:outline-none focus:border-emerald-500/50 transition-all font-mono"
@@ -2047,7 +2046,7 @@ export default function App() {
                         <div className="p-3 bg-neutral-950/20 flex-1 flex flex-col justify-between text-left">
                           <div>
                             <div className="text-[9px] font-semibold text-amber-200 uppercase tracking-widest leading-none mb-1">
-                              {item.brand || "Gymshark Exclusive"}
+                              {item.brand || "Macy's Exclusive"}
                             </div>
                             <p className="text-xs font-semibold text-white tracking-wider line-clamp-1 mb-2">
                               {item.name}
@@ -2193,7 +2192,7 @@ export default function App() {
                 <span>INTELLIGENCE SPECIFICATION SHEET</span>
               </div>
               <h1 className="font-display font-light text-3xl md:text-4xl text-white">
-                Gymshark Personal Fitting Advisor System
+                Macy's Personal Fitting Advisor System
               </h1>
               <p className="text-neutral-550 font-mono text-xs mt-2 uppercase tracking-widest">
                 SYSTEM INTERNALS AND DECISION FLOWS
@@ -2209,7 +2208,7 @@ export default function App() {
                   {[
                     "1. Executive Architecture",
                     "2. AI Preference Model",
-                    "3. Gymshark Store Stock Room",
+                    "3. Macy's Store Stock Room",
                     "4. Feedback Recommendation Algorithm",
                     "5. Sourced Fallbacks Specs"
                   ].map((cat, idx) => (
@@ -2251,10 +2250,10 @@ export default function App() {
 
                 <section className="space-y-3">
                   <h2 className="font-display font-normal text-xl text-white border-b border-neutral-900 pb-2">
-                    3. Gymshark Active Store Inventory Database
+                    3. Macy's Active Store Inventory Database
                   </h2>
                   <p>
-                    Instead of arbitrary private garments uploads, the Advisor searches an active store stock catalog curated specifically from Gymshark collection (featuring renowned partner labels like Alfani, Calvin Klein, Michael Kors, Charter Club, Levi's, and Tommy Hilfiger).
+                    Instead of arbitrary private garments uploads, the Advisor searches an active store stock catalog curated specifically from Macy's collection (featuring renowned partner labels like Alfani, Calvin Klein, Michael Kors, Charter Club, Levi's, and Tommy Hilfiger).
                   </p>
                   <p>
                     The item matrix records brand associations, gender divisions (Men's vs Women's collection), material attributes, and dominant color shades, ensuring exact-match coordination on the sales floor.
@@ -2266,7 +2265,7 @@ export default function App() {
                     4. State-Authoritative Recommendation Engine
                   </h2>
                   <p>
-                    We leverage the server-side `@google/genai` SDK using `gemini-2.5-flash`. The model cross-references Gymshark available store inventory, filters matching gender segments, incorporates body-palette constraints, and suggests exactly three custom coordinated outfits.
+                    We leverage the server-side `@google/genai` SDK using `gemini-2.5-flash`. The model cross-references Macy's available store inventory, filters matching gender segments, incorporates body-palette constraints, and suggests exactly three custom coordinated outfits.
                   </p>
                   <p>
                     Instead of return lists, suggestions are presented as interactive flashcards. Customers can either add items to their **Favorites**, or click **Dislike** to transition smoothly to the next suggestion.
@@ -2297,7 +2296,7 @@ export default function App() {
       {/* FOOTER METADATA MARGIN */}
       <footer className="mt-12 py-8 border-t border-neutral-900 text-center text-xs text-neutral-500 font-mono">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p>© 2026 Gymshark Personal Fitting Advisor. Sourced and compiled via Google GenAI.</p>
+          <p>© 2026 Macy's Personal Fitting Advisor. Sourced and compiled via Google GenAI.</p>
         </div>
       </footer>
 
