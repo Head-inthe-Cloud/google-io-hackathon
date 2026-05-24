@@ -367,6 +367,7 @@ export interface GenerateTryOnParams {
   }>;
   itemImages?: string[];
   selfieBase64?: string | null;
+  variants?: number;
 }
 
 export interface TryOnGuardrail {
@@ -385,6 +386,15 @@ export interface GenerateTryOnResult {
   guardrail?: TryOnGuardrail;
   garmentReferenceCount?: number;
   recommendedItemsUsed?: string[];
+  selectedVariantIndex?: number;
+  variantCount?: number;
+  variantScores?: Array<{
+    variantIndex: number;
+    pass?: boolean | null;
+    faithfulness_score?: number | null;
+    status?: string;
+    issues?: string[];
+  }>;
   error?: string;
 }
 

@@ -34,11 +34,22 @@ import * as api from "./api";
 
 type RecommendationTraceStep = api.RecommendationTraceStep;
 
+type TryOnRenderCacheEntry = {
+  imageUrl: string | null;
+  visualError: string | null;
+  guardrail: api.TryOnGuardrail | null;
+  selectedVariantIndex?: number;
+  variantCount?: number;
+};
+
 const policyLinesFromProfile = (profile: string) =>
   profile
     .split(/\n+/)
     .map((line) => line.replace(/^[-•]\s*/, "").trim())
     .filter(Boolean);
+
+const tryOnCacheKey = (outfit: OutfitRecommendation) =>
+  `${outfit.outfitName}::${outfit.items.map((item) => item.id || item.name).join("|")}`;
 
 function PreferencePolicyPanel({ profile }: { profile: string }) {
   const lines = policyLinesFromProfile(profile);
@@ -253,7 +264,9 @@ export default function App() {
   const [generatedVisualUrl, setGeneratedVisualUrl] = useState<string | null>(null);
   const [visualError, setVisualError] = useState<string | null>(null);
   const [visualGuardrail, setVisualGuardrail] = useState<api.TryOnGuardrail | null>(null);
-  const autoTryOnKeyRef = useRef<string>("");
+  const [tryOnRenderCache, setTryOnRenderCache] = useState<Record<string, TryOnRenderCacheEntry>>({});
+  const tryOnInFlightRef = useRef<Set<string>>(new Set());
+  const activeTryOnKeyRef = useRef<string>("");
 
   // Save states to LocalStorage
   // Load catalog from backend on mount (and when gender changes)
@@ -580,7 +593,9 @@ export default function App() {
     setGeneratedVisualUrl(null);
     setVisualError(null);
     setVisualGuardrail(null);
-    autoTryOnKeyRef.current = "";
+    setTryOnRenderCache({});
+    tryOnInFlightRef.current.clear();
+    activeTryOnKeyRef.current = "";
     setRecommendationTraceStack([
       {
         label: "Survey profile",
@@ -677,9 +692,13 @@ export default function App() {
 
   const handleSelectRecommendation = (index: number) => {
     setQueueIndex(index);
-    setGeneratedVisualUrl(null);
-    setVisualError(null);
-    setVisualGuardrail(null);
+    const selectedOutfit = recsQueue[index];
+    const selectedKey = selectedOutfit ? tryOnCacheKey(selectedOutfit) : "";
+    activeTryOnKeyRef.current = selectedKey;
+    const cachedRender = selectedKey ? tryOnRenderCache[selectedKey] : null;
+    setGeneratedVisualUrl(cachedRender?.imageUrl || null);
+    setVisualError(cachedRender?.visualError || null);
+    setVisualGuardrail(cachedRender?.guardrail || null);
     setLikedRecFeedback(false);
   };
 
@@ -689,7 +708,19 @@ export default function App() {
   };
 
   // Generate synthetic Try On rendering
-  const handleGenerateSyntheticRender = useCallback(async (outfit: OutfitRecommendation) => {
+  const handleGenerateSyntheticRender = useCallback(async (outfit: OutfitRecommendation, force = false) => {
+    const cacheKey = tryOnCacheKey(outfit);
+    const cachedRender = tryOnRenderCache[cacheKey];
+    if (!force && cachedRender) {
+      setGeneratedVisualUrl(cachedRender.imageUrl);
+      setVisualError(cachedRender.visualError);
+      setVisualGuardrail(cachedRender.guardrail);
+      return;
+    }
+    if (tryOnInFlightRef.current.has(cacheKey)) return;
+    tryOnInFlightRef.current.add(cacheKey);
+    activeTryOnKeyRef.current = cacheKey;
+
     setIsGeneratingVisual(true);
     setGeneratedVisualUrl(null);
     setVisualError(null);
@@ -718,42 +749,59 @@ export default function App() {
       status: "active",
     });
 
-    try {
-      const data = await api.generateTryOnImage({
-        outfitName: outfit.outfitName,
-        prompt: userPrompt || "Cozy look",
-        itemsStr,
-        items: resolvedItems,
-        itemImages,
-        selfieBase64: selfieImage,
-      });
-      setVisualGuardrail(data.guardrail || null);
-      if (data.imageUrl) {
-        setGeneratedVisualUrl(data.imageUrl);
-        if (data.error) {
-          setVisualError(`Warning: ${data.error}`);
+	    try {
+	      const data = await api.generateTryOnImage({
+	        outfitName: outfit.outfitName,
+	        prompt: userPrompt || "Cozy look",
+	        itemsStr,
+	        items: resolvedItems,
+	        itemImages,
+	        selfieBase64: selfieImage,
+          variants: 3,
+	      });
+        let nextImageUrl: string | null = null;
+        let nextVisualError: string | null = null;
+	      if (data.imageUrl) {
+          nextImageUrl = data.imageUrl;
+	        if (data.error) {
+	          nextVisualError = `Warning: ${data.error}`;
+	        }
+	      } else if (data.simulatedUrl) {
+          nextImageUrl = data.simulatedUrl;
+	        if (data.error) {
+	          nextVisualError = `Simulation active: ${data.error}`;
+	        }
+	      } else if (data.advice) {
+	        if (selfieImage) {
+	          nextImageUrl = selfieImage;
+	        }
+	        nextVisualError = data.advice;
+	      } else {
+	        throw new Error("No image URL returned by the visualization service");
+	      }
+        if (activeTryOnKeyRef.current === cacheKey) {
+          setGeneratedVisualUrl(nextImageUrl);
+          setVisualError(nextVisualError);
+          setVisualGuardrail(data.guardrail || null);
         }
-      } else if (data.simulatedUrl) {
-        setGeneratedVisualUrl(data.simulatedUrl);
-        if (data.error) {
-          setVisualError(`Simulation active: ${data.error}`);
-        }
-      } else if (data.advice) {
-        if (selfieImage) {
-          setGeneratedVisualUrl(selfieImage);
-        }
-        setVisualError(data.advice);
-      } else {
-        throw new Error("No image URL returned by the visualization service");
-      }
-      upsertRecommendationTrace({
-        label: "Try-on generation",
-        detail:
-          data.source === "gemini_image"
-            ? `Gemini returned a generated try-on image using ${data.garmentReferenceCount ?? itemImages.length} garment references.`
-            : `Gemini returned try-on advice using ${data.garmentReferenceCount ?? itemImages.length} garment references, without a generated image.`,
-        status: "complete",
-      });
+        setTryOnRenderCache((prev) => ({
+          ...prev,
+          [cacheKey]: {
+            imageUrl: nextImageUrl,
+            visualError: nextVisualError,
+            guardrail: data.guardrail || null,
+            selectedVariantIndex: data.selectedVariantIndex,
+            variantCount: data.variantCount,
+          },
+        }));
+	      upsertRecommendationTrace({
+	        label: "Try-on generation",
+	        detail:
+	          data.source === "gemini_image"
+	            ? `Gemini generated ${data.variantCount ?? 3} variants using ${data.garmentReferenceCount ?? itemImages.length} garment references and selected variant ${data.selectedVariantIndex ?? 1}.`
+	            : `Gemini returned try-on advice using ${data.garmentReferenceCount ?? itemImages.length} garment references, without a generated image.`,
+	        status: "complete",
+	      });
       if (data.guardrail) {
         upsertRecommendationTrace({
           label: "Image guardrail",
@@ -766,23 +814,25 @@ export default function App() {
       }
     } catch (err: any) {
       console.error("Failed to generate image on backend:", err);
-      setVisualError(`Generation failed: ${err.message || err}.`);
+      if (activeTryOnKeyRef.current === cacheKey) {
+        setVisualError(`Generation failed: ${err.message || err}.`);
+      }
       upsertRecommendationTrace({
         label: "Try-on generation",
         detail: err?.message || String(err),
         status: "error",
       });
     } finally {
-      setIsGeneratingVisual(false);
+      tryOnInFlightRef.current.delete(cacheKey);
+      if (activeTryOnKeyRef.current === cacheKey || tryOnInFlightRef.current.size === 0) {
+        setIsGeneratingVisual(false);
+      }
     }
-  }, [closetItems, selfieImage, upsertRecommendationTrace, userPrompt]);
+  }, [closetItems, selfieImage, tryOnRenderCache, upsertRecommendationTrace, userPrompt]);
 
   useEffect(() => {
     if (isRecommending || recsQueue.length === 0 || queueIndex >= recsQueue.length) return;
     const outfit = recsQueue[queueIndex];
-    const tryOnKey = `${queueIndex}:${outfit.outfitName}`;
-    if (autoTryOnKeyRef.current === tryOnKey) return;
-    autoTryOnKeyRef.current = tryOnKey;
     handleGenerateSyntheticRender(outfit);
   }, [handleGenerateSyntheticRender, isRecommending, queueIndex, recsQueue]);
 
@@ -1858,10 +1908,10 @@ export default function App() {
 	                              <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-neutral-900 border border-neutral-850 p-2 flex flex-col items-center justify-center text-center self-center max-w-[280px]">
                                 {isGeneratingVisual ? (
                                   <div className="p-4 flex flex-col items-center">
-                                    <div className="w-8 h-8 rounded-full border-2 border-amber-200 border-t-transparent animate-spin mb-3" />
-                                    <p className="text-[10px] text-neutral-400 font-mono uppercase tracking-wide">
-                                      Generating photorealistic synthesis...
-                                    </p>
+	                                    <div className="w-8 h-8 rounded-full border-2 border-amber-200 border-t-transparent animate-spin mb-3" />
+	                                    <p className="text-[10px] text-neutral-400 font-mono uppercase tracking-wide">
+	                                      Generating 3 guarded variants...
+	                                    </p>
                                   </div>
                                 ) : generatedVisualUrl ? (
                                   <div className="relative w-full h-full rounded-lg overflow-hidden group">
@@ -1878,7 +1928,7 @@ export default function App() {
                                     )}
                                     <div className="absolute inset-0 bg-neutral-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                       <button 
-                                        onClick={() => handleGenerateSyntheticRender(recsQueue[queueIndex])}
+	                                        onClick={() => handleGenerateSyntheticRender(recsQueue[queueIndex], true)}
                                         className="text-[10px] bg-neutral-950/90 hover:bg-neutral-950 text-white font-mono uppercase border border-neutral-800 px-3 py-1.5 rounded"
                                       >
                                         RE-GENERATE
@@ -1893,7 +1943,7 @@ export default function App() {
                                       The clothing layers will be simulated over your full-body portrait profile. Click to project a gorgeous cinematic look.
                                     </p>
                                     <button
-                                      onClick={() => handleGenerateSyntheticRender(recsQueue[queueIndex])}
+	                                      onClick={() => handleGenerateSyntheticRender(recsQueue[queueIndex], true)}
                                       className="px-4 py-2 bg-neutral-950 hover:bg-neutral-900 border border-neutral-800 text-amber-200 hover:text-white rounded-lg text-[11px] font-mono tracking-wider transition-all"
                                     >
                                       GENERATE AI PORTRAIT Preview

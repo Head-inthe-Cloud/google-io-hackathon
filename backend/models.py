@@ -146,6 +146,7 @@ class GenerateTryOnRequest(BaseModel):
     items: Optional[List[Dict[str, Any]]] = None
     itemImages: Optional[List[str]] = None
     selfieBase64: Optional[str] = None
+    variants: Optional[int] = 1
 
 class UploadUrlRequest(BaseModel):
     filename: str

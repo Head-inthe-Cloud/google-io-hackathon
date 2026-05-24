@@ -12,6 +12,7 @@ import os
 import json
 import uuid
 import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv, find_dotenv
 from fastapi import FastAPI, HTTPException, Query, Request
@@ -371,6 +372,25 @@ def _image_part_from_input(image_value: Optional[str]):
 
     image_bytes, mime_type = image_data
     return types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
+
+
+def _extension_for_mime_type(mime_type: str) -> str:
+    if "jpeg" in mime_type or "jpg" in mime_type:
+        return "jpg"
+    if "webp" in mime_type:
+        return "webp"
+    return "png"
+
+
+def _save_tryon_image(image_bytes: bytes, mime_type: str, variant_index: int) -> str:
+    upload_dir = os.path.join("static", "uploads", "tryon")
+    os.makedirs(upload_dir, exist_ok=True)
+    extension = _extension_for_mime_type(mime_type)
+    filename = f"tryon-{uuid.uuid4().hex}-v{variant_index}.{extension}"
+    file_path = os.path.join(upload_dir, filename)
+    with open(file_path, "wb") as image_file:
+        image_file.write(image_bytes)
+    return f"/static/uploads/tryon/{filename}"
 
 
 def _mock_outfit_recommendations(
@@ -1424,57 +1444,114 @@ def generate_try_on(request: GenerateTryOnRequest):
             contents.append(types.Part.from_bytes(data=selfie_image_data[0], mime_type=selfie_image_data[1]))
         for garment_bytes, garment_mime in garment_image_data:
             contents.append(types.Part.from_bytes(data=garment_bytes, mime_type=garment_mime))
-        contents.append(tryon_prompt)
+        base_contents = list(contents)
+        variant_count = max(1, min(request.variants or 1, 3))
 
         try:
-            image_response = gemini_service.client.models.generate_content(
-                model=os.getenv("TRYON_MODEL") or "gemini-2.5-flash-image",
-                contents=contents,
-                config=types.GenerateContentConfig(response_modalities=["TEXT", "IMAGE"]),
-            )
+            import base64 as b64
 
-            for candidate in image_response.candidates or []:
-                for part in candidate.content.parts:
-                    if part.inline_data and part.inline_data.data:
-                        import base64 as b64
-                        mime_type = part.inline_data.mime_type or "image/png"
-                        b64_img = b64.b64encode(part.inline_data.data).decode()
-                        guardrail = {
-                            "status": "skipped",
-                            "pass": None,
-                            "faithfulness_score": None,
-                            "issues": ["Guardrail requires shopper and garment reference images."],
+            def generate_variant(variant_index: int) -> Optional[Dict[str, Any]]:
+                variant_prompt = (
+                    f"{tryon_prompt}\nVariant {variant_index + 1} of {variant_count}: "
+                    "produce a distinct but faithful styling render. Prioritize matching the garment reference images."
+                )
+                image_response = gemini_service.client.models.generate_content(
+                    model=os.getenv("TRYON_MODEL") or "gemini-2.5-flash-image",
+                    contents=[*base_contents, variant_prompt],
+                    config=types.GenerateContentConfig(response_modalities=["TEXT", "IMAGE"]),
+                )
+
+                for candidate in image_response.candidates or []:
+                    for part in candidate.content.parts:
+                        if part.inline_data and part.inline_data.data:
+                            mime_type = part.inline_data.mime_type or "image/png"
+                            b64_img = b64.b64encode(part.inline_data.data).decode()
+                            saved_image_url = _save_tryon_image(
+                                part.inline_data.data,
+                                mime_type,
+                                variant_index + 1,
+                            )
+                            guardrail = {
+                                "status": "skipped",
+                                "pass": None,
+                                "faithfulness_score": None,
+                                "issues": ["Guardrail requires shopper and garment reference images."],
+                            }
+                            if selfie_image_data and garment_image_data:
+                                try:
+                                    guardrail_result = guardrail_agent.check_tryon_guardrail(
+                                        customer_image=selfie_image_data[0],
+                                        customer_mime=selfie_image_data[1],
+                                        garment_images=[image_bytes for image_bytes, _ in garment_image_data],
+                                        garment_mimes=[image_mime for _, image_mime in garment_image_data],
+                                        tryon_image=part.inline_data.data,
+                                        tryon_mime=mime_type,
+                                        metadata={
+                                            "recommendation_id": request.outfitName or "frontend-try-on",
+                                            "reason": request.prompt,
+                                            "items": request.items or [],
+                                            "variant_index": variant_index + 1,
+                                        },
+                                    )
+                                    guardrail = {"status": "checked", **guardrail_result}
+                                except Exception as guardrail_error:
+                                    guardrail = {
+                                        "status": "error",
+                                        "pass": None,
+                                        "faithfulness_score": None,
+                                        "issues": [str(guardrail_error)],
+                                    }
+                            return {
+                                "variantIndex": variant_index + 1,
+                                "imageUrl": saved_image_url,
+                                "dataImageUrl": f"data:{mime_type};base64,{b64_img}",
+                                "guardrail": guardrail,
+                            }
+                return None
+
+            variant_results = []
+            with ThreadPoolExecutor(max_workers=variant_count) as executor:
+                futures = [
+                    executor.submit(generate_variant, variant_index)
+                    for variant_index in range(variant_count)
+                ]
+                for future in as_completed(futures):
+                    try:
+                        variant_result = future.result()
+                        if variant_result:
+                            variant_results.append(variant_result)
+                    except Exception as variant_error:
+                        print(f"Try-on variant generation failed: {variant_error}")
+
+            if variant_results:
+                def variant_rank(result: Dict[str, Any]) -> Tuple[int, float]:
+                    guardrail = result.get("guardrail") or {}
+                    return (
+                        1 if guardrail.get("pass") else 0,
+                        float(guardrail.get("faithfulness_score") or -1),
+                    )
+
+                selected = max(variant_results, key=variant_rank)
+                return {
+                    "imageUrl": selected["imageUrl"],
+                    "advice": advice,
+                    "source": "gemini_image",
+                    "guardrail": selected["guardrail"],
+                    "selectedVariantIndex": selected["variantIndex"],
+                    "variantCount": variant_count,
+                    "variantScores": [
+                        {
+                            "variantIndex": result["variantIndex"],
+                            "pass": (result.get("guardrail") or {}).get("pass"),
+                            "faithfulness_score": (result.get("guardrail") or {}).get("faithfulness_score"),
+                            "status": (result.get("guardrail") or {}).get("status"),
+                            "issues": (result.get("guardrail") or {}).get("issues") or [],
+                            "imageUrl": result.get("imageUrl"),
                         }
-                        if selfie_image_data and garment_image_data:
-                            try:
-                                guardrail_result = guardrail_agent.check_tryon_guardrail(
-                                    customer_image=selfie_image_data[0],
-                                    customer_mime=selfie_image_data[1],
-                                    garment_images=[image_bytes for image_bytes, _ in garment_image_data],
-                                    garment_mimes=[image_mime for _, image_mime in garment_image_data],
-                                    tryon_image=part.inline_data.data,
-                                    tryon_mime=mime_type,
-                                    metadata={
-                                        "recommendation_id": request.outfitName or "frontend-try-on",
-                                        "reason": request.prompt,
-                                        "items": request.items or [],
-                                    },
-                                )
-                                guardrail = {"status": "checked", **guardrail_result}
-                            except Exception as guardrail_error:
-                                guardrail = {
-                                    "status": "error",
-                                    "pass": None,
-                                    "faithfulness_score": None,
-                                    "issues": [str(guardrail_error)],
-                                }
-                        return {
-                            "imageUrl": f"data:{mime_type};base64,{b64_img}",
-                            "advice": advice,
-                            "source": "gemini_image",
-                            "guardrail": guardrail,
-                            **tryon_input_summary,
-                        }
+                        for result in sorted(variant_results, key=lambda item: item["variantIndex"])
+                    ],
+                    **tryon_input_summary,
+                }
         except Exception as e:
             print(f"Try-on image generation unavailable for current Gemini model: {e}")
 
