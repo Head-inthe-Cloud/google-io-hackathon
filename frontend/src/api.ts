@@ -104,6 +104,7 @@ export function catalogItemToClosetItem(item: BackendCatalogItem): ClosetItem {
     pattern: item.pattern || item.fit || "Standard",
     vibe: item.description || item.vibe || "A stylish garment.",
     imageUrl: item.image_url || item.imageUrl,
+    productLink: item.product_link || undefined,
     isCustom: false,
     brand: item.brand || "Gymshark",
     gender: genderMap[item.gender] || "unisex",
@@ -230,8 +231,15 @@ export interface RecommendParams {
   gender?: string;
 }
 
+export interface RecommendationTraceStep {
+  label: string;
+  detail: string;
+  status?: "active" | "complete" | "error";
+}
+
 export interface RecommendResponse {
   recommendations: OutfitRecommendation[];
+  traceStack?: RecommendationTraceStep[];
 }
 
 export async function getRecommendations(params: RecommendParams): Promise<RecommendResponse> {
@@ -254,6 +262,9 @@ export async function getRecommendations(params: RecommendParams): Promise<Recom
       pattern: item.pattern,
       vibe: item.vibe,
       description: item.vibe,
+      imageUrl: item.imageUrl,
+      productLink: item.productLink,
+      brand: item.brand,
     }));
   }
 
@@ -346,7 +357,24 @@ export interface GenerateTryOnParams {
   outfitName?: string;
   prompt?: string;
   itemsStr?: string;
+  items?: Array<{
+    id?: string;
+    name?: string;
+    category?: string;
+    color?: string;
+    brand?: string;
+    imageUrl?: string;
+  }>;
+  itemImages?: string[];
   selfieBase64?: string | null;
+}
+
+export interface TryOnGuardrail {
+  status?: "checked" | "skipped" | "error";
+  pass?: boolean | null;
+  faithfulness_score?: number | null;
+  issues?: string[];
+  dimension_scores?: Record<string, number>;
 }
 
 export interface GenerateTryOnResult {
@@ -354,6 +382,9 @@ export interface GenerateTryOnResult {
   simulatedUrl?: string;
   advice?: string;
   source?: string;
+  guardrail?: TryOnGuardrail;
+  garmentReferenceCount?: number;
+  recommendedItemsUsed?: string[];
   error?: string;
 }
 

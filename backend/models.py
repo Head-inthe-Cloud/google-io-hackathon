@@ -143,6 +143,8 @@ class GenerateTryOnRequest(BaseModel):
     outfitName: Optional[str] = None
     prompt: Optional[str] = None
     itemsStr: Optional[str] = None
+    items: Optional[List[Dict[str, Any]]] = None
+    itemImages: Optional[List[str]] = None
     selfieBase64: Optional[str] = None
 
 class UploadUrlRequest(BaseModel):

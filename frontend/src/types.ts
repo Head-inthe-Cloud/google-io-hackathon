@@ -17,6 +17,7 @@ export interface ClosetItem {
   pattern: string;
   vibe: string;
   imageUrl?: string;
+  productLink?: string;
   isCustom?: boolean;
   brand?: string;
   gender?: "male" | "female" | "unisex";
@@ -26,6 +27,8 @@ export interface SourcedProduct {
   name: string;
   price: string;
   reason: string;
+  url?: string;
+  buyUrl?: string;
 }
 
 export interface OutfitRecommendation {
@@ -35,6 +38,11 @@ export interface OutfitRecommendation {
     id: string;
     name: string;
     category: GarmentCategory;
+    color?: string;
+    brand?: string;
+    imageUrl?: string;
+    productLink?: string;
+    buyUrl?: string;
   }>;
   onlineSourced: SourcedProduct[];
   tryOnAdvice: string;

@@ -17,7 +17,7 @@ from dotenv import load_dotenv, find_dotenv
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 # Load environment variables from .env
 load_dotenv(find_dotenv())
@@ -110,9 +110,71 @@ def _serialize_catalog_item(item: Dict[str, Any]) -> Dict[str, Any]:
         "activity": item.get("activity"),
         "collection": item.get("collection"),
         "product_link": item.get("product_link"),
+        "productLink": item.get("product_link"),
+        "buyUrl": item.get("product_link"),
         "style_tags": item.get("style_tags"),
         "brand": item.get("brand") or ("Everlane" if (os.getenv("DATASET") == "dataset2" or os.getenv("CATALOG_DATASET") == "dataset2") else "Gymshark"),
     }
+
+
+def _item_id_keys(value: Any) -> List[str]:
+    if value is None:
+        return []
+    raw = str(value)
+    keys = [raw]
+    if raw.startswith("catalog-"):
+        keys.append(raw.replace("catalog-", "", 1))
+    elif raw.isdigit():
+        keys.append(f"catalog-{raw}")
+    return keys
+
+
+def _hydrate_frontend_recommendations(
+    recommendations: List[Dict[str, Any]],
+    closet_items: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    by_id = {}
+    for closet_item in closet_items:
+        for key in _item_id_keys(closet_item.get("id")):
+            by_id[key] = closet_item
+    by_name = {
+        str(item.get("name", "")).strip().lower(): item
+        for item in closet_items
+        if item.get("name")
+    }
+
+    hydrated_recommendations = []
+    for recommendation in recommendations:
+        hydrated_items = []
+        for item in recommendation.get("items") or []:
+            matched = {}
+            for item_id_key in _item_id_keys(item.get("id")):
+                if item_id_key in by_id:
+                    matched = by_id[item_id_key]
+                    break
+            if not matched:
+                matched = by_name.get(str(item.get("name", "")).strip().lower()) or {}
+            image_url = item.get("imageUrl") or item.get("image_url") or matched.get("imageUrl") or matched.get("image_url")
+            buy_url = (
+                item.get("buyUrl")
+                or item.get("productLink")
+                or item.get("product_link")
+                or matched.get("productLink")
+                or matched.get("product_link")
+            )
+            hydrated_items.append({
+                **item,
+                "id": item.get("id") or matched.get("id"),
+                "name": item.get("name") or matched.get("name"),
+                "category": item.get("category") or matched.get("category"),
+                "color": item.get("color") or matched.get("color"),
+                "brand": item.get("brand") or matched.get("brand"),
+                "imageUrl": image_url,
+                "productLink": buy_url,
+                "buyUrl": buy_url,
+            })
+        hydrated_recommendations.append({**recommendation, "items": hydrated_items})
+    return hydrated_recommendations
 
 
 def _get_session_or_404(session_token: str) -> Dict[str, Any]:
@@ -284,25 +346,31 @@ def _style_vector_summary(style_vector: Optional[List[float]]) -> str:
     return "\n".join(lines)
 
 
-def _image_part_from_input(image_value: Optional[str]):
+def _image_bytes_from_input(image_value: Optional[str]) -> Optional[Tuple[bytes, str]]:
     if not image_value:
         return None
-    from google.genai import types
     import base64 as b64
 
     try:
         if ";base64," in image_value:
             header, clean_b64 = image_value.split(";base64,", 1)
             mime_type = header.split("data:", 1)[-1].split(";", 1)[0] or "image/jpeg"
-            return types.Part.from_bytes(data=b64.b64decode(clean_b64), mime_type=mime_type)
+            return b64.b64decode(clean_b64), mime_type
         if image_value.startswith("http://") or image_value.startswith("https://"):
-            return types.Part.from_bytes(
-                data=gemini_service.fetch_image_bytes(image_value),
-                mime_type="image/jpeg",
-            )
+            return gemini_service.fetch_image_bytes(image_value), "image/jpeg"
     except Exception as exc:
-        print(f"Skipping preference profile image input: {exc}")
+        print(f"Skipping image input: {exc}")
     return None
+
+
+def _image_part_from_input(image_value: Optional[str]):
+    image_data = _image_bytes_from_input(image_value)
+    if not image_data:
+        return None
+    from google.genai import types
+
+    image_bytes, mime_type = image_data
+    return types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
 
 
 def _mock_outfit_recommendations(
@@ -1105,6 +1173,15 @@ def build_preference_profile(request: PreferenceProfileRequest):
             config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
         result = json.loads(response.text.strip())
+        profile = result.get("preferenceProfile")
+        if isinstance(profile, list):
+            result["preferenceProfile"] = "\n".join(str(line).strip() for line in profile if str(line).strip())
+        elif isinstance(profile, str):
+            result["preferenceProfile"] = profile.strip()
+        elif profile:
+            result["preferenceProfile"] = json.dumps(profile, ensure_ascii=False)
+        else:
+            raise ValueError("Gemini response did not include preferenceProfile")
         result.setdefault("source", "gemini")
         return result
     except Exception as e:
@@ -1118,15 +1195,32 @@ def frontend_recommend(request: FrontendRecommendRequest):
     Frontend-compatible recommendation endpoint.
     Works without requiring a session — auto-creates one if needed.
     """
+    trace_stack = []
     closet_items = request.closet or []
 
     if not closet_items:
         gender = request.gender
         _, db_items = store.query_catalog(gender=gender, limit=30)
         closet_items = [_serialize_catalog_item(i) for i in db_items]
+        trace_stack.append({
+            "label": "Catalog retrieval",
+            "detail": f"Loaded {len(closet_items)} dataset2 inventory candidates for {gender or 'all genders'}.",
+            "status": "complete",
+        })
+    else:
+        trace_stack.append({
+            "label": "Catalog retrieval",
+            "detail": f"Received {len(closet_items)} active inventory candidates from the frontend catalog state.",
+            "status": "complete",
+        })
 
     if not closet_items:
-        return {"recommendations": []}
+        trace_stack.append({
+            "label": "Recommendation generation",
+            "detail": "No inventory candidates were available.",
+            "status": "error",
+        })
+        return {"recommendations": [], "traceStack": trace_stack}
 
     preferences_str = ", ".join(request.preferences) if request.preferences else "Casual"
     selfie_desc = request.selfieDescription or "Average build"
@@ -1154,26 +1248,54 @@ def frontend_recommend(request: FrontendRecommendRequest):
 
     formatted_closet = "\n".join(
         f"- [ID: {c.get('id', '?')}] {c.get('name', 'Item')} "
-        f"({c.get('category', '?')}, Color: {c.get('color', 'N/A')}, "
+        f"({c.get('category', '?')}, Brand: {c.get('brand', 'N/A')}, "
+        f"Color: {c.get('color', 'N/A')}, "
+        f"Image: {c.get('imageUrl') or c.get('image_url') or 'N/A'}, "
+        f"Buy URL: {c.get('productLink') or c.get('product_link') or 'N/A'}, "
         f"Vibe: {c.get('vibe', c.get('description', 'N/A'))})"
-        for c in closet_items[:30]
+        for c in closet_items[:60]
     )
+    trace_stack.append({
+        "label": "Preference policy",
+        "detail": f"Applied {len([line for line in preference_profile.splitlines() if line.strip()])} generated policy lines from the survey and image inputs.",
+        "status": "complete",
+    })
+    trace_stack.append({
+        "label": "Candidate context",
+        "detail": f"Prepared {min(len(closet_items), 60)} candidates for Gemini recommendation scoring.",
+        "status": "complete",
+    })
 
     if not gemini_service.init_gemini():
         items_for_mock = closet_items[:3]
+        trace_stack.append({
+            "label": "Gemini recommendation",
+            "detail": "Skipped because GEMINI_API_KEY is not configured.",
+            "status": "error",
+        })
         return {
             "recommendations": [
                 {
                     "outfitName": "Classic Everyday Harmony",
                     "rationale": f"A balanced combination inspired by your '{prompt}' request.",
                     "items": [
-                        {"id": it.get("id", "mock"), "name": it.get("name", "Item"), "category": it.get("category", "Tops")}
+                        {
+                            "id": it.get("id", "mock"),
+                            "name": it.get("name", "Item"),
+                            "category": it.get("category", "Tops"),
+                            "imageUrl": it.get("imageUrl") or it.get("image_url"),
+                            "buyUrl": it.get("productLink") or it.get("product_link"),
+                            "productLink": it.get("productLink") or it.get("product_link"),
+                            "brand": it.get("brand"),
+                            "color": it.get("color"),
+                        }
                         for it in items_for_mock[:2]
                     ],
                     "onlineSourced": [{"name": "Suede Chelsea Boots", "price": "$120", "reason": "Completes the look."}],
                     "tryOnAdvice": f"These items pair well with your body type ({selfie_desc}).",
                 }
-            ]
+            ],
+            "traceStack": trace_stack,
         }
 
     try:
@@ -1188,11 +1310,12 @@ def frontend_recommend(request: FrontendRecommendRequest):
             f"{style_dna_section}"
             f"- Occasion: {prompt}\n\n"
             f"Available Store Inventory:\n{formatted_closet}\n\n"
-            f"Generate exactly 3 distinct outfit recommendations. Use items from the inventory (reference their IDs). "
-            f"Place supplementary items in 'onlineSourced'.\n\n"
+            f"Generate exactly 3 distinct outfit recommendations. Each recommendation must be a product set with 2-4 inventory items when enough compatible items are available. "
+            f"Use items from the inventory and reference their exact IDs. Do not return single-product looks unless the candidate pool only has one compatible item. "
+            f"Place supplementary items in 'onlineSourced' only when the inventory set has a gap.\n\n"
             f"Return JSON with a 'recommendations' array. Each has:\n"
-            f"- outfitName, rationale, items ({{id, name, category}}), "
-            f"onlineSourced ({{name, price, reason}}), tryOnAdvice\n"
+            f"- outfitName, rationale, items ({{id, name, category, imageUrl, buyUrl, brand, color}}), "
+            f"onlineSourced ({{name, price, reason, url}}), tryOnAdvice\n"
         )
 
         contents: list = []
@@ -1210,7 +1333,16 @@ def frontend_recommend(request: FrontendRecommendRequest):
             contents=contents,
             config=types.GenerateContentConfig(response_mime_type="application/json"),
         )
-        return json.loads(response.text.strip())
+        result = json.loads(response.text.strip())
+        recommendations = _hydrate_frontend_recommendations(result.get("recommendations") or [], closet_items)
+        result["recommendations"] = recommendations
+        trace_stack.append({
+            "label": "Gemini recommendation",
+            "detail": f"{gemini_service.model_name()} returned {len(recommendations)} outfit recommendations.",
+            "status": "complete",
+        })
+        result["traceStack"] = trace_stack
+        return result
     except Exception as e:
         print(f"Error in recommend: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -1225,6 +1357,7 @@ def generate_try_on(request: GenerateTryOnRequest):
         from google.genai import types
 
         appearance = "A fashionable model with elegant proportions"
+        selfie_image_data = _image_bytes_from_input(request.selfieBase64)
         if request.selfieBase64 and ";base64," in request.selfieBase64:
             try:
                 import base64 as b64
@@ -1240,12 +1373,38 @@ def generate_try_on(request: GenerateTryOnRequest):
             except Exception as e:
                 print(f"Selfie analysis failed: {e}")
 
+        garment_image_data = [
+            image_data
+            for image_data in [
+                _image_bytes_from_input(image)
+                for image in (request.itemImages or [])[:4]
+                if image
+            ]
+            if image_data
+        ]
+        garment_context = ""
+        if request.items:
+            garment_context = "\nRecommended item metadata:\n" + json.dumps(
+                request.items[:6],
+                ensure_ascii=False,
+            )
+        tryon_input_summary = {
+            "garmentReferenceCount": len(garment_image_data),
+            "recommendedItemsUsed": [
+                item.get("name")
+                for item in (request.items or [])
+                if item.get("name")
+            ],
+        }
+
         tryon_prompt = (
             "Create a photorealistic virtual try-on preview for the provided shopper image and outfit. "
             f"Preserve the shopper identity and body proportions. Person: {appearance}. "
             f"Wearing: {request.itemsStr or 'stylish outfit'}. "
+            "Use the attached garment reference images as the source of truth for color, silhouette, and category. "
             f"Outfit name: {request.outfitName or 'Custom Look'}. "
             "Return an image if this model supports image output."
+            f"{garment_context}"
         )
 
         advice_response = gemini_service.client.models.generate_content(
@@ -1261,14 +1420,15 @@ def generate_try_on(request: GenerateTryOnRequest):
         advice = advice_response.text.strip() if advice_response.text else None
 
         contents = []
-        selfie_part = _image_part_from_input(request.selfieBase64)
-        if selfie_part:
-            contents.append(selfie_part)
+        if selfie_image_data:
+            contents.append(types.Part.from_bytes(data=selfie_image_data[0], mime_type=selfie_image_data[1]))
+        for garment_bytes, garment_mime in garment_image_data:
+            contents.append(types.Part.from_bytes(data=garment_bytes, mime_type=garment_mime))
         contents.append(tryon_prompt)
 
         try:
             image_response = gemini_service.client.models.generate_content(
-                model=os.getenv("TRYON_MODEL") or gemini_service.model_name(),
+                model=os.getenv("TRYON_MODEL") or "gemini-2.5-flash-image",
                 contents=contents,
                 config=types.GenerateContentConfig(response_modalities=["TEXT", "IMAGE"]),
             )
@@ -1279,21 +1439,65 @@ def generate_try_on(request: GenerateTryOnRequest):
                         import base64 as b64
                         mime_type = part.inline_data.mime_type or "image/png"
                         b64_img = b64.b64encode(part.inline_data.data).decode()
+                        guardrail = {
+                            "status": "skipped",
+                            "pass": None,
+                            "faithfulness_score": None,
+                            "issues": ["Guardrail requires shopper and garment reference images."],
+                        }
+                        if selfie_image_data and garment_image_data:
+                            try:
+                                guardrail_result = guardrail_agent.check_tryon_guardrail(
+                                    customer_image=selfie_image_data[0],
+                                    customer_mime=selfie_image_data[1],
+                                    garment_images=[image_bytes for image_bytes, _ in garment_image_data],
+                                    garment_mimes=[image_mime for _, image_mime in garment_image_data],
+                                    tryon_image=part.inline_data.data,
+                                    tryon_mime=mime_type,
+                                    metadata={
+                                        "recommendation_id": request.outfitName or "frontend-try-on",
+                                        "reason": request.prompt,
+                                        "items": request.items or [],
+                                    },
+                                )
+                                guardrail = {"status": "checked", **guardrail_result}
+                            except Exception as guardrail_error:
+                                guardrail = {
+                                    "status": "error",
+                                    "pass": None,
+                                    "faithfulness_score": None,
+                                    "issues": [str(guardrail_error)],
+                                }
                         return {
                             "imageUrl": f"data:{mime_type};base64,{b64_img}",
                             "advice": advice,
                             "source": "gemini_image",
+                            "guardrail": guardrail,
+                            **tryon_input_summary,
                         }
         except Exception as e:
             print(f"Try-on image generation unavailable for current Gemini model: {e}")
 
+        guardrail = {
+            "status": "skipped",
+            "pass": None,
+            "faithfulness_score": None,
+            "issues": ["No generated try-on image was returned by the model."],
+        }
         if request.selfieBase64:
             return {
                 "imageUrl": request.selfieBase64,
                 "advice": advice,
                 "source": "input_portrait_with_gemini_advice",
+                "guardrail": guardrail,
+                **tryon_input_summary,
             }
-        return {"advice": advice, "source": "gemini_advice"}
+        return {
+            "advice": advice,
+            "source": "gemini_advice",
+            "guardrail": guardrail,
+            **tryon_input_summary,
+        }
     except Exception as e:
         print(f"Error in generate-try-on: {e}")
         raise HTTPException(status_code=502, detail=f"Try-on generation failed: {e}") from e

@@ -4,7 +4,7 @@ import os
 
 
 PRIMARY_GEMINI_MODEL = os.getenv("GEMINI_MODEL") or os.getenv("RECOMMENDER_MODEL") or "gemini-3.5-flash"
-TRYON_MODEL = os.getenv("TRYON_MODEL") or PRIMARY_GEMINI_MODEL
+TRYON_MODEL = os.getenv("TRYON_MODEL") or "gemini-2.5-flash-image"
 GUARDRAIL_MODEL = os.getenv("GUARDRAIL_MODEL") or PRIMARY_GEMINI_MODEL
 
 GUARDRAIL_PASS_THRESHOLD = 0.75

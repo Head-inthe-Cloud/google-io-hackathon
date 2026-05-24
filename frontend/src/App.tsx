@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, ChangeEvent } from "react";
+import { useState, useEffect, useRef, useCallback, ChangeEvent } from "react";
 import { 
   Sparkles, 
   Upload, 
@@ -31,6 +31,98 @@ import { motion, AnimatePresence } from "motion/react";
 import { STYLE_PREF_CHOICES, INITIAL_CLOSET_ITEMS, STYLE_QUIZ_OUTFITS, QuizOutfit } from "./data";
 import { ClosetItem, StylePreference, OutfitRecommendation, UserPortfolio, GarmentCategory, SourcedProduct } from "./types";
 import * as api from "./api";
+
+type RecommendationTraceStep = api.RecommendationTraceStep;
+
+const policyLinesFromProfile = (profile: string) =>
+  profile
+    .split(/\n+/)
+    .map((line) => line.replace(/^[-•]\s*/, "").trim())
+    .filter(Boolean);
+
+function PreferencePolicyPanel({ profile }: { profile: string }) {
+  const lines = policyLinesFromProfile(profile);
+  if (lines.length === 0) return null;
+
+  return (
+    <div className="border border-neutral-850 bg-neutral-900/35 rounded-2xl p-4">
+      <div className="flex items-center space-x-2 mb-3">
+        <FileCheck2 className="w-4 h-4 text-amber-200" />
+        <h3 className="text-[11px] font-mono uppercase tracking-wider text-neutral-200">Preference Policy</h3>
+      </div>
+      <ul className="space-y-2">
+        {lines.map((line, index) => (
+          <li key={`${line}-${index}`} className="flex gap-2 text-xs leading-relaxed text-neutral-300">
+            <Check className="w-3.5 h-3.5 text-emerald-300 mt-0.5 flex-shrink-0" />
+            <span>{line}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function TraceStackPanel({ steps }: { steps: RecommendationTraceStep[] }) {
+  if (steps.length === 0) return null;
+
+  return (
+    <div className="border border-neutral-850 bg-neutral-950/45 rounded-2xl p-4">
+      <div className="flex items-center space-x-2 mb-3">
+        <Terminal className="w-4 h-4 text-neutral-300" />
+        <h3 className="text-[11px] font-mono uppercase tracking-wider text-neutral-200">Recommendation Trace</h3>
+      </div>
+      <ol className="space-y-2">
+        {steps.map((step, index) => (
+          <li key={`${step.label}-${index}`} className="grid grid-cols-[18px_1fr] gap-2 text-xs">
+            <span
+              className={`mt-1 h-2.5 w-2.5 rounded-full ${
+                step.status === "error"
+                  ? "bg-rose-400"
+                  : step.status === "active"
+                    ? "bg-amber-200 animate-pulse"
+                    : "bg-emerald-300"
+              }`}
+            />
+            <span>
+              <span className="block text-neutral-100">{step.label}</span>
+              <span className="block text-neutral-450 leading-relaxed">{step.detail}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+function GuardrailPanel({ guardrail }: { guardrail: api.TryOnGuardrail | null }) {
+  if (!guardrail) return null;
+
+  const status =
+    guardrail.status === "checked"
+      ? guardrail.pass
+        ? "Passed"
+        : "Needs review"
+      : guardrail.status === "error"
+        ? "Error"
+        : "Skipped";
+
+  return (
+    <div className="mt-3 border border-neutral-850 bg-neutral-950/70 rounded-xl p-3 text-left">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-400">Image Guardrail</span>
+        <span className="text-[10px] font-mono text-neutral-200">{status}</span>
+      </div>
+      {typeof guardrail.faithfulness_score === "number" && (
+        <p className="text-[11px] text-neutral-300 mb-1">
+          Faithfulness score: {guardrail.faithfulness_score.toFixed(2)}
+        </p>
+      )}
+      {guardrail.issues && guardrail.issues.length > 0 && (
+        <p className="text-[11px] text-neutral-450 leading-relaxed">{guardrail.issues.join("; ")}</p>
+      )}
+    </div>
+  );
+}
 
 const AESTHETIC_FACTORS: Record<string, number[]> = {
   "Minimalist": [1.0, -0.6, 0.2, -0.8, -0.2, -1.0, -0.8, 0.4],
@@ -141,6 +233,7 @@ export default function App() {
   const [preferenceProfile, setPreferenceProfile] = useState<string>(() => {
     return localStorage.getItem("user_preference_profile") || "";
   });
+  const [recommendationTraceStack, setRecommendationTraceStack] = useState<RecommendationTraceStep[]>([]);
 
   // Clothing item analysis state
   const [isAnalyzingItem, setIsAnalyzingItem] = useState<boolean>(false);
@@ -159,6 +252,8 @@ export default function App() {
   const [isGeneratingVisual, setIsGeneratingVisual] = useState<boolean>(false);
   const [generatedVisualUrl, setGeneratedVisualUrl] = useState<string | null>(null);
   const [visualError, setVisualError] = useState<string | null>(null);
+  const [visualGuardrail, setVisualGuardrail] = useState<api.TryOnGuardrail | null>(null);
+  const autoTryOnKeyRef = useRef<string>("");
 
   // Save states to LocalStorage
   // Load catalog from backend on mount (and when gender changes)
@@ -312,6 +407,14 @@ export default function App() {
     setHasCompletedOnboarding(false);
   };
 
+  const upsertRecommendationTrace = useCallback((step: RecommendationTraceStep) => {
+    setRecommendationTraceStack((prev) => {
+      const existingIndex = prev.findIndex((item) => item.label === step.label);
+      if (existingIndex === -1) return [...prev, step];
+      return prev.map((item, index) => (index === existingIndex ? step : item));
+    });
+  }, []);
+
   // 1-Click test image loader for items
   const addPresetItem = (preset: { name: string; category: GarmentCategory; color: string; pattern: string; vibe: string; image: string }) => {
     const newItem: ClosetItem = {
@@ -463,13 +566,28 @@ export default function App() {
 
   // Request styling recommendations
   const requestStylingRecommendations = async () => {
+    const activePreferences = STYLE_PREF_CHOICES.filter(p => selectedStylesOnboard.includes(p.id)).map(p => p.name);
+    const preferredGender = quizGender === "male" ? "male" : "female";
+    const inventorySource = stockroomItems.length > 0 ? stockroomItems : closetItems;
+    const recommendationInventory = inventorySource.filter((item) => {
+      return !item.gender || item.gender === preferredGender || item.gender === "unisex";
+    });
+    const recommendationCandidates = recommendationInventory.length > 0 ? recommendationInventory : inventorySource;
+
     setIsRecommending(true);
     setRecsQueue([]);
     setQueueIndex(0);
     setGeneratedVisualUrl(null);
     setVisualError(null);
-
-    const activePreferences = STYLE_PREF_CHOICES.filter(p => selectedStylesOnboard.includes(p.id)).map(p => p.name);
+    setVisualGuardrail(null);
+    autoTryOnKeyRef.current = "";
+    setRecommendationTraceStack([
+      {
+        label: "Survey profile",
+        detail: `${activePreferences.length} selected styles and ${likedQuizOutfits.length} liked survey images queued for Gemini.`,
+        status: "active",
+      },
+    ]);
 
     try {
       const profile = await api.buildPreferenceProfile({
@@ -482,42 +600,52 @@ export default function App() {
         styleVector: userStyleVector,
         gender: quizGender,
       });
-      setPreferenceProfile(profile.preferenceProfile);
+      const generatedProfile = profile.preferenceProfile || "";
+      setPreferenceProfile(generatedProfile);
+      upsertRecommendationTrace({
+        label: "Survey profile",
+        detail: `Gemini built ${policyLinesFromProfile(generatedProfile).length} policy lines from the survey and image inputs.`,
+        status: "complete",
+      });
+      upsertRecommendationTrace({
+        label: "Inventory search",
+        detail: `Searching ${recommendationCandidates.length} dataset2 catalog candidates for the customer request.`,
+        status: "active",
+      });
 
       const data = await api.getRecommendations({
         preferences: activePreferences,
-        closet: closetItems,
+        closet: recommendationCandidates,
         selfieDescription: selfieDescription,
         selfieImage,
         prompt: userPrompt,
         inspirationImage: inspirationImage,
         styleVector: userStyleVector,
-        preferenceProfile: profile.preferenceProfile,
+        preferenceProfile: generatedProfile,
         gender: quizGender === "male" ? "mens" : "womens",
       });
 
       if (data.recommendations && data.recommendations.length > 0) {
+        setRecommendationTraceStack([
+          {
+            label: "Survey profile",
+            detail: `Gemini built ${policyLinesFromProfile(generatedProfile).length} policy lines from the survey and image inputs.`,
+            status: "complete",
+          },
+          ...(data.traceStack || []),
+        ]);
         setRecsQueue(data.recommendations);
       } else {
         throw new Error("No clothing matching coordinates compiled.");
       }
-    } catch (err) {
-      console.error("Failed recommendation fetch, falling back:", err);
-      // Hard fallback
-      setRecsQueue([
-        {
-          outfitName: "The Urban Academic Harmony",
-          rationale: `We designed this tailored combination because you wanted style advice for "${userPrompt || "Daily Classic Outing"}". It plays heavily on your preferred preppy lines.`,
-          items: [
-            { id: closetItems[0]?.id || "init-1", name: closetItems[0]?.name || "Cream French Linen Shirt", category: "Tops" },
-            { id: closetItems[2]?.id || "init-3", name: closetItems[2]?.name || "Tailored Slate Charcoal Trousers", category: "Bottoms" }
-          ],
-          onlineSourced: [
-            { name: "Suede Camel Chelsea Boots", price: "$140", reason: "Adds exquisite outerwear balance to the slate pants." }
-          ],
-          tryOnAdvice: "Its crisp vertical shoulder drop fits your posture cleanly, complementing your natural skin temperature."
-        }
-      ]);
+    } catch (err: any) {
+      console.error("Failed recommendation fetch:", err);
+      upsertRecommendationTrace({
+        label: "Recommendation",
+        detail: err?.message || String(err),
+        status: "error",
+      });
+      setRecsQueue([]);
     } finally {
       setIsRecommending(false);
     }
@@ -543,31 +671,63 @@ export default function App() {
     setTimeout(() => {
       setLikedRecFeedback(false);
       // Advance or finish queue
-      setQueueIndex((prev) => prev + 1);
+      handleSelectRecommendation(queueIndex + 1);
     }, 1800);
+  };
+
+  const handleSelectRecommendation = (index: number) => {
+    setQueueIndex(index);
+    setGeneratedVisualUrl(null);
+    setVisualError(null);
+    setVisualGuardrail(null);
+    setLikedRecFeedback(false);
   };
 
   // Dislike / Skip Outfit
   const handleDislikeCurrentOutfit = () => {
-    setQueueIndex((prev) => prev + 1);
-    setGeneratedVisualUrl(null);
+    handleSelectRecommendation(queueIndex + 1);
   };
 
   // Generate synthetic Try On rendering
-  const handleGenerateSyntheticRender = async (outfit: OutfitRecommendation) => {
+  const handleGenerateSyntheticRender = useCallback(async (outfit: OutfitRecommendation) => {
     setIsGeneratingVisual(true);
     setGeneratedVisualUrl(null);
     setVisualError(null);
+    setVisualGuardrail(null);
 
     const itemsStr = outfit.items.map(i => i.name).join(", ");
+	    const resolvedItems = outfit.items.map((item) => {
+	      const fullItemObj = closetItems.find(c => c.id === item.id || c.name === item.name);
+	      const imageUrl = item.imageUrl || fullItemObj?.imageUrl;
+	      const buyUrl = item.buyUrl || item.productLink || fullItemObj?.productLink;
+      return {
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        color: item.color || fullItemObj?.color,
+        brand: item.brand || fullItemObj?.brand,
+        imageUrl,
+        buyUrl,
+        productLink: buyUrl,
+      };
+    });
+    const itemImages = Array.from(new Set(resolvedItems.map((item) => item.imageUrl).filter(Boolean) as string[]));
+    upsertRecommendationTrace({
+      label: "Try-on generation",
+      detail: `Sending ${itemImages.length} recommended garment images with the shopper portrait.`,
+      status: "active",
+    });
 
     try {
       const data = await api.generateTryOnImage({
         outfitName: outfit.outfitName,
         prompt: userPrompt || "Cozy look",
         itemsStr,
+        items: resolvedItems,
+        itemImages,
         selfieBase64: selfieImage,
       });
+      setVisualGuardrail(data.guardrail || null);
       if (data.imageUrl) {
         setGeneratedVisualUrl(data.imageUrl);
         if (data.error) {
@@ -586,14 +746,45 @@ export default function App() {
       } else {
         throw new Error("No image URL returned by the visualization service");
       }
+      upsertRecommendationTrace({
+        label: "Try-on generation",
+        detail:
+          data.source === "gemini_image"
+            ? `Gemini returned a generated try-on image using ${data.garmentReferenceCount ?? itemImages.length} garment references.`
+            : `Gemini returned try-on advice using ${data.garmentReferenceCount ?? itemImages.length} garment references, without a generated image.`,
+        status: "complete",
+      });
+      if (data.guardrail) {
+        upsertRecommendationTrace({
+          label: "Image guardrail",
+          detail:
+            data.guardrail.status === "checked"
+              ? `Guardrail ${data.guardrail.pass ? "passed" : "flagged review"}${typeof data.guardrail.faithfulness_score === "number" ? ` at ${data.guardrail.faithfulness_score.toFixed(2)}` : ""}.`
+              : `${data.guardrail.status || "skipped"}: ${(data.guardrail.issues || []).join("; ")}`,
+          status: data.guardrail.status === "error" ? "error" : "complete",
+        });
+      }
     } catch (err: any) {
       console.error("Failed to generate image on backend:", err);
-      setVisualError(`Generation failed: ${err.message || err}. Showing fallback simulation.`);
-      setGeneratedVisualUrl("https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=600");
+      setVisualError(`Generation failed: ${err.message || err}.`);
+      upsertRecommendationTrace({
+        label: "Try-on generation",
+        detail: err?.message || String(err),
+        status: "error",
+      });
     } finally {
       setIsGeneratingVisual(false);
     }
-  };
+  }, [closetItems, selfieImage, upsertRecommendationTrace, userPrompt]);
+
+  useEffect(() => {
+    if (isRecommending || recsQueue.length === 0 || queueIndex >= recsQueue.length) return;
+    const outfit = recsQueue[queueIndex];
+    const tryOnKey = `${queueIndex}:${outfit.outfitName}`;
+    if (autoTryOnKeyRef.current === tryOnKey) return;
+    autoTryOnKeyRef.current = tryOnKey;
+    handleGenerateSyntheticRender(outfit);
+  }, [handleGenerateSyntheticRender, isRecommending, queueIndex, recsQueue]);
 
   // Remove closet item
   const removeClosetItem = (id: string) => {
@@ -1182,8 +1373,8 @@ export default function App() {
         {activeTab === "discover" && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            {/* Column 1: Try-On Model Portrait & Morph Traits (3 cols) */}
-            <div className="lg:col-span-3 space-y-6">
+            {/* Survey/profile inputs are kept out of the main clerk flow. */}
+            <div className="hidden">
               
               {/* Selfie Frame & Demographics */}
               <div className="border border-neutral-800/85 bg-neutral-900/30 rounded-2xl p-5 overflow-hidden">
@@ -1286,39 +1477,39 @@ export default function App() {
 
             </div>
 
-            {/* Column 2: Query Outfit Requirements (3 cols) */}
-            <div className="lg:col-span-3 space-y-6">
+            {/* Customer request */}
+            <div className="lg:col-span-4 space-y-6">
               
               {/* Dynamic prompts and vibes builder */}
               <div className="border border-neutral-800 bg-neutral-900/40 rounded-2xl p-5 shadow-lg">
                 <div className="flex items-center space-x-2 mb-4">
                   <Sparkles className="w-4 h-4 text-amber-200" />
-                  <h2 className="font-display font-medium text-sm text-white uppercase tracking-widest">Query Outfit Requirements</h2>
+	                  <h2 className="font-display font-medium text-sm text-white uppercase tracking-widest">Customer Request</h2>
                 </div>
 
                 {/* Prompt textarea */}
                 <div className="space-y-3">
                   <div>
                     <label className="block text-[10px] uppercase font-mono tracking-wider text-neutral-400 mb-1.5">
-                      What is the occasion or specific style vibe you need?
+	                      What does the customer need?
                     </label>
                     <textarea
                       value={userPrompt}
                       onChange={(e) => setUserPrompt(e.target.value)}
-                      placeholder="e.g. going to a chilly seaside bistro evening, rainy coffee reading hour, or formal speech..."
+	                      placeholder="e.g. dinner after work, rainy commute outfit, conference look..."
                       className="w-full h-24 bg-neutral-950 border border-neutral-850 rounded-xl p-3 text-sm text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-400/20 transition-all font-sans leading-normal"
                     />
                   </div>
 
                   {/* Suggest shortcut prompt blocks */}
                   <div>
-                    <span className="block text-[9px] font-mono text-neutral-500 uppercase mb-1">Quick Occasion Presets:</span>
+	                    <span className="block text-[9px] font-mono text-neutral-500 uppercase mb-1">Quick Presets</span>
                     <div className="flex flex-wrap gap-1.5">
                       {[
-                        "Rainy Afternoon Coffee Shop Reading",
-                        "Autumn Beach Sunset Date night",
-                        "Tech Conference Business Keynote Speech",
-                        "Weekend Outdoor Light Camping Adventure"
+	                        "Rainy commute",
+	                        "Dinner after work",
+	                        "Conference look",
+	                        "Weekend outdoors"
                       ].map((presetPrompt) => (
                         <button
                           key={presetPrompt}
@@ -1334,7 +1525,7 @@ export default function App() {
                   {/* Optional similar garments reference image uploader */}
                   <div className="border-t border-neutral-850 pt-3">
                     <label className="block text-[10px] uppercase font-mono tracking-wider text-neutral-450 mb-2">
-                      Inspiration Image (To Find/Match Similar Pieces)
+	                      Optional Reference Image
                     </label>
                     
                     {inspirationImage ? (
@@ -1355,8 +1546,7 @@ export default function App() {
                     ) : (
                       <label className="flex flex-col items-center justify-center border-2 border-dashed border-neutral-800 hover:border-amber-305/30 rounded-xl p-3 cursor-pointer bg-neutral-950 transition-colors text-center">
                         <Upload className="w-4 h-4 text-neutral-500 mb-1" />
-                        <span className="text-[11px] text-neutral-300 font-medium">Upload style/outfit image (Optional)</span>
-                        <span className="text-[9px] text-neutral-500 mt-1 max-w-[180px] leading-normal">AI parses color codes to find matching inventory layers instead of text alone</span>
+	                        <span className="text-[11px] text-neutral-300 font-medium">Upload reference image</span>
                         <input 
                           type="file" 
                           accept="image/*" 
@@ -1374,7 +1564,7 @@ export default function App() {
                     className="w-full mt-2 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-xl text-sm flex items-center justify-center space-x-2 transition-all shadow-lg text-center font-display disabled:opacity-50 hover:shadow-indigo-200/50 hover:shadow-xl active:scale-[0.99]"
                   >
                     <span>
-                      {isRecommending ? "AI Stylist Agent Synthesizing..." : "Ask AI Advisor for Outfit Strategy"}
+	                      {isRecommending ? "Working..." : "Get Recommendations"}
                     </span>
                     <Sparkles className="w-4 h-4 text-white animate-pulse" />
                   </button>
@@ -1384,8 +1574,8 @@ export default function App() {
 
             </div>
 
-            {/* Right Interactive Recommendation Queue & Try-on Area (6 cols) */}
-            <div className="lg:col-span-6 flex flex-col space-y-6">
+            {/* Recommendation output */}
+            <div className="lg:col-span-8 flex flex-col space-y-6">
               
               {/* If no query has been triggered yet */}
               {recsQueue.length === 0 && !isRecommending && (
@@ -1397,11 +1587,16 @@ export default function App() {
                     </div>
                   </div>
                   <h3 className="font-display font-light text-2xl text-white mb-3">AI Stylist Workbench</h3>
-                  <p className="text-neutral-400 max-w-lg mx-auto text-sm leading-relaxed mb-6">
-                    Macy's store catalog features <span className="text-amber-200 font-medium tracking-tight">{closetItems.length}</span> active available items. Configure search queries or inspiration parameters below, and our AI fitting suite will select specific store items to compose exactly three custom outfits.
-                  </p>
-                  
-                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+	                  <p className="text-neutral-400 max-w-lg mx-auto text-sm leading-relaxed mb-6">
+	                    Macy's store catalog features <span className="text-amber-200 font-medium tracking-tight">{closetItems.length}</span> active available items. Configure search queries or inspiration parameters below, and our AI fitting suite will select specific store items to compose exactly three custom outfits.
+	                  </p>
+                    {recommendationTraceStack.length > 0 && (
+                      <div className="w-full max-w-lg mb-6 text-left">
+                        <TraceStackPanel steps={recommendationTraceStack} />
+                      </div>
+                    )}
+	                  
+	                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                     <button
                       onClick={() => {
                         setUserPrompt("Weekend Date, Retro Romantic & Vintage Vibes");
@@ -1430,40 +1625,19 @@ export default function App() {
 
               {/* Loading progress screen */}
               {isRecommending && (
-                <div className="border border-neutral-850 bg-neutral-900/15 rounded-3xl p-12 text-center flex flex-col items-center justify-center min-h-[500px]">
-                  <div className="w-16 h-16 relative mb-6">
-                    <div className="absolute inset-0 border-4 border-amber-200/10 rounded-full" />
-                    <div className="absolute inset-0 border-4 border-amber-200 border-t-transparent rounded-full animate-spin" />
-                  </div>
-                  <h3 className="font-display font-light text-xl text-white mb-2 tracking-wide">
-                     Macy's AI Fitting Intelligence Synthesizing...
-                  </h3>
-                  <p className="text-neutral-400 text-xs font-mono max-w-md mx-auto leading-relaxed uppercase tracking-wider">
-                     Analyzing Macy's store inventory items, comparing customer's aesthetic parameters, drafting custom try-on coordinates and tailoring supplementary store pieces...
-                  </p>
-                  <div className="mt-8 space-y-1 w-full max-w-xs mx-auto">
-                    <div className="flex justify-between text-[9px] font-mono text-neutral-500">
-                      <span>CONTEXT VECTOR SYNTHESIS</span>
-                      <span>ACTIVE</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-neutral-950 rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: "0%" }}
-                        animate={{ width: "100%" }}
-                        transition={{ duration: 3.5, repeat: Infinity }}
-                        className="h-full bg-amber-200"
-                      />
-                    </div>
-                  </div>
+                <div className="border border-neutral-850 bg-neutral-900/15 rounded-3xl p-6 min-h-[500px] flex flex-col justify-center">
+                  <TraceStackPanel steps={recommendationTraceStack} />
                 </div>
               )}
 
               {/* Dynamic Recs queue displays */}
               {recsQueue.length > 0 && !isRecommending && (
-                <div>
+                <div className="space-y-4">
+                  <PreferencePolicyPanel profile={preferenceProfile} />
+                  <TraceStackPanel steps={recommendationTraceStack} />
                   
                   {/* Queue progress and prompts overview header */}
-                  <div className="flex items-center justify-between mb-4 px-2">
+	                  <div className="flex items-center justify-between mb-4 px-2">
                     <div className="flex items-center space-x-2">
                       <span className="text-[10px] font-mono bg-neutral-900 text-amber-200 border border-neutral-800 px-2 py-0.5 rounded uppercase">
                         Outfit Proposal {queueIndex + 1} / {recsQueue.length}
@@ -1474,23 +1648,46 @@ export default function App() {
                         </span>
                       )}
                     </div>
-                    <div className="flex space-x-1">
-                      {recsQueue.map((_, i) => (
-                        <div 
-                          key={i} 
-                          className={`w-4 h-1 rounded-full ${
-                            i === queueIndex 
-                              ? "bg-amber-200" 
-                              : i < queueIndex 
-                                ? "bg-neutral-700" 
-                                : "bg-neutral-850"
+	                    <div className="flex flex-wrap justify-end gap-1">
+	                      {recsQueue.map((_, i) => (
+	                        <button 
+	                          key={i}
+                            type="button"
+                            onClick={() => handleSelectRecommendation(i)}
+                            aria-label={`View recommendation ${i + 1}`}
+	                          className={`h-7 min-w-7 rounded-md border px-2 text-[10px] font-mono transition ${
+	                            i === queueIndex 
+	                              ? "bg-amber-200 text-neutral-950 border-amber-200" 
+	                              : i < queueIndex 
+	                                ? "bg-neutral-800 text-neutral-300 border-neutral-700 hover:border-neutral-500" 
+	                                : "bg-neutral-950 text-neutral-500 border-neutral-850 hover:text-neutral-200"
+	                          }`}
+	                        >
+                            {i + 1}
+	                        </button>
+	                      ))}
+	                    </div>
+	                  </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+                      {recsQueue.map((recommendation, i) => (
+                        <button
+                          key={`${recommendation.outfitName}-${i}`}
+                          type="button"
+                          onClick={() => handleSelectRecommendation(i)}
+                          className={`min-h-16 rounded-xl border p-3 text-left transition ${
+                            i === queueIndex
+                              ? "border-amber-200 bg-amber-200/10"
+                              : "border-neutral-850 bg-neutral-950/60 hover:border-neutral-700"
                           }`}
-                        />
+                        >
+                          <span className="block text-[10px] font-mono text-neutral-500 uppercase">Recommendation {i + 1}</span>
+                          <span className="mt-1 block text-xs font-medium text-neutral-100 line-clamp-2">{recommendation.outfitName}</span>
+                          <span className="mt-1 block text-[10px] text-neutral-500">{recommendation.items.length} products</span>
+                        </button>
                       ))}
                     </div>
-                  </div>
 
-                  {/* Recommendation Queue boundaries */}
+	                  {/* Recommendation Queue boundaries */}
                   {queueIndex < recsQueue.length ? (
                     <div className="space-y-6">
                       
@@ -1554,22 +1751,24 @@ export default function App() {
                                 <h4 className="text-[10px] font-mono text-neutral-400 uppercase tracking-wider mb-3">
                                   Suggested Wardrobe Items (Closet Selections)
                                 </h4>
-                                <div className="space-y-2">
-                                  {recsQueue[queueIndex].items.map((item, idx) => {
-                                    const fullItemObj = closetItems.find(c => c.id === item.id || c.name === item.name);
-                                    return (
-                                      <div 
-                                        key={idx} 
-                                        className="flex items-center justify-between p-3 bg-neutral-950/80 border border-neutral-850 rounded-xl"
-                                      >
-                                        <div className="flex items-center space-x-3">
-                                          {fullItemObj?.imageUrl ? (
-                                            <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-neutral-900 border border-neutral-800">
-                                              <img 
-                                                src={fullItemObj.imageUrl} 
-                                                alt={item.name} 
-                                                className="w-full h-full object-cover" 
-                                                referrerPolicy="no-referrer"
+	                                <div className="space-y-2">
+	                                  {recsQueue[queueIndex].items.map((item, idx) => {
+	                                    const fullItemObj = closetItems.find(c => c.id === item.id || c.name === item.name);
+                                      const itemImageUrl = item.imageUrl || fullItemObj?.imageUrl;
+                                      const itemBuyUrl = item.buyUrl || item.productLink || fullItemObj?.productLink;
+	                                    return (
+	                                      <div 
+	                                        key={idx} 
+	                                        className="flex items-center justify-between p-3 bg-neutral-950/80 border border-neutral-850 rounded-xl"
+	                                      >
+	                                        <div className="flex items-center space-x-3">
+	                                          {itemImageUrl ? (
+	                                            <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-neutral-900 border border-neutral-800">
+	                                              <img 
+	                                                src={itemImageUrl} 
+	                                                alt={item.name} 
+	                                                className="w-full h-full object-cover" 
+	                                                referrerPolicy="no-referrer"
                                               />
                                             </div>
                                           ) : (
@@ -1577,17 +1776,30 @@ export default function App() {
                                               <Shirt className="w-5 h-5" />
                                             </div>
                                           )}
-                                          <div>
-                                            <p className="text-xs font-medium text-white">{item.name}</p>
-                                            <p className="text-[9px] font-mono text-neutral-450 uppercase">{item.category}</p>
-                                          </div>
-                                        </div>
-                                        <span className="text-[10px] text-amber-200/80 bg-neutral-900 px-2 py-0.5 rounded font-mono border border-neutral-850">
-                                          CLOSET ITEM
-                                        </span>
-                                      </div>
-                                    );
-                                  })}
+	                                          <div>
+	                                            <p className="text-xs font-medium text-white">{item.name}</p>
+	                                            <p className="text-[9px] font-mono text-neutral-450 uppercase">
+                                                {[item.brand || fullItemObj?.brand, item.category, item.color || fullItemObj?.color].filter(Boolean).join(" / ")}
+                                              </p>
+	                                          </div>
+	                                        </div>
+                                          {itemBuyUrl ? (
+                                            <a
+                                              href={itemBuyUrl}
+                                              target="_blank"
+                                              rel="noreferrer"
+                                              className="text-[10px] text-amber-200/80 hover:text-amber-100 bg-neutral-900 px-2 py-1 rounded font-mono border border-neutral-850"
+                                            >
+                                              BUY
+                                            </a>
+                                          ) : (
+                                            <span className="text-[10px] text-neutral-500 bg-neutral-900 px-2 py-0.5 rounded font-mono border border-neutral-850">
+                                              ITEM
+                                            </span>
+                                          )}
+	                                      </div>
+	                                    );
+	                                  })}
                                 </div>
                               </div>
 
@@ -1601,14 +1813,26 @@ export default function App() {
                                     </h4>
                                   </div>
                                   <div className="space-y-2">
-                                    {recsQueue[queueIndex].onlineSourced.map((prod, idx) => (
-                                      <div key={idx} className="p-3 bg-neutral-950/30 border border-neutral-850 rounded-xl">
-                                        <div className="flex justify-between items-start mb-1">
-                                          <p className="text-xs font-medium text-amber-100">{prod.name}</p>
-                                          <span className="text-xs font-mono font-medium text-amber-200">{prod.price}</span>
-                                        </div>
-                                        <p className="text-[11px] text-neutral-400 font-light leading-tight">{prod.reason}</p>
-                                      </div>
+	                                    {recsQueue[queueIndex].onlineSourced.map((prod, idx) => (
+	                                      <div key={idx} className="p-3 bg-neutral-950/30 border border-neutral-850 rounded-xl">
+	                                        <div className="flex justify-between items-start mb-1">
+	                                          <p className="text-xs font-medium text-amber-100">{prod.name}</p>
+                                            <div className="flex items-center gap-2">
+	                                            <span className="text-xs font-mono font-medium text-amber-200">{prod.price}</span>
+                                              {(prod.buyUrl || prod.url) && (
+                                                <a
+                                                  href={prod.buyUrl || prod.url}
+                                                  target="_blank"
+                                                  rel="noreferrer"
+                                                  className="text-[10px] text-neutral-950 bg-amber-200 hover:bg-amber-100 rounded px-2 py-0.5 font-mono"
+                                                >
+                                                  BUY
+                                                </a>
+                                              )}
+                                            </div>
+	                                        </div>
+	                                        <p className="text-[11px] text-neutral-400 font-light leading-tight">{prod.reason}</p>
+	                                      </div>
                                     ))}
                                   </div>
                                 </div>
@@ -1631,7 +1855,7 @@ export default function App() {
                               </div>
 
                               {/* Virtual Try-On Canvas */}
-                              <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-neutral-900 border border-neutral-850 p-2 flex flex-col items-center justify-center text-center self-center max-w-[280px]">
+	                              <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-neutral-900 border border-neutral-850 p-2 flex flex-col items-center justify-center text-center self-center max-w-[280px]">
                                 {isGeneratingVisual ? (
                                   <div className="p-4 flex flex-col items-center">
                                     <div className="w-8 h-8 rounded-full border-2 border-amber-200 border-t-transparent animate-spin mb-3" />
@@ -1675,10 +1899,11 @@ export default function App() {
                                       GENERATE AI PORTRAIT Preview
                                     </button>
                                   </div>
-                                )}
-                              </div>
+	                                )}
+	                              </div>
+                                <GuardrailPanel guardrail={visualGuardrail} />
 
-                              {/* Interactive Actions */}
+	                              {/* Interactive Actions */}
                               <div className="flex space-x-3 mt-6 border-t border-neutral-850 pt-5">
                                 <button
                                   onClick={handleDislikeCurrentOutfit}
